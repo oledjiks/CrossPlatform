@@ -24,7 +24,7 @@ namespace Socket
         len *= sizeof(T);
         if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
         {
-            stringstream error;
+            std::stringstream error;
             error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data << "] [len=" << len << "] Data length higher then max buffer len";
             throw SocketException(error.str());
         }
@@ -34,7 +34,7 @@ namespace Socket
 
         if ((ret = sendto(this->_socket_id, (const char*)data, len, 0, (struct sockaddr*)&address, sizeof(struct sockaddr))) == -1)
         {
-            stringstream error;
+            std::stringstream error;
             error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data << "] [len=" << len << "] Cannot send";
             throw SocketException(error.str());
         }
@@ -61,25 +61,25 @@ namespace Socket
     }
 
     template <>
-    int UDP::send<string>(Ip ip, Port port, string data)
+    int UDP::send<std::string>(Ip ip, Port port, std::string data)
     {
         return this->send<char>(ip, port, data.c_str(), data.length() + 1);
     }
 
     template <>
-    int UDP::send<string>(Address address, string data)
+    int UDP::send<std::string>(Address address, std::string data)
     {
         return this->send<char>(address.ip(), address.port(), data.c_str(), data.length() + 1);
     }
 
     template <class T>
-    int UDP::send(Ip ip, Port port, vector<T> data)
+    int UDP::send(Ip ip, Port port, std::vector<T> data)
     {
         return this->send<T>(ip, port, data.data(), data.size());
     }
 
     template <class T>
-    int UDP::send(Address address, vector<T> data)
+    int UDP::send(Address address, std::vector<T> data)
     {
         return this->send<T>(address.ip(), address.port(), data.data(), data.size());
     }
@@ -93,7 +93,7 @@ namespace Socket
         len *= sizeof(T);
         if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
         {
-            stringstream error;
+            std::stringstream error;
             error << "[send] with [buffer=" << data << "] [len=" << len << "] Data length higher then max buffer length";
             throw SocketException(error.str());
         }
@@ -143,9 +143,9 @@ namespace Socket
     }
 
     template <>
-    Datagram<string> UDP::receive<string>(void)
+    Datagram<std::string> UDP::receive<std::string>(void)
     {
-        Datagram<string> ret;
+        Datagram<std::string> ret;
         char buffer[SOCKET_MAX_BUFFER_LEN];
 
         ret.received_bytes = this->receive<char>(&ret.address, buffer, SOCKET_MAX_BUFFER_LEN, &ret.received_elements);
@@ -155,9 +155,9 @@ namespace Socket
     }
 
     template <class T>
-    Datagram<vector<T> > UDP::receive(size_t len)
+    Datagram<std::vector<T> > UDP::receive(size_t len)
     {
-        Datagram<vector<T> > ret;
+        Datagram<std::vector<T> > ret;
         T buffer[len];
 
         ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);

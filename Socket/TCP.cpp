@@ -37,7 +37,7 @@ namespace Socket
 
         if (listen(this->_socket_id, listeners) != 0)
         {
-            stringstream error;
+            std::stringstream error;
             error << "[listen_on_port] with [port=" << port << "] [listeners=" << listeners << "] Cannot bind socket";
             throw SocketException(error.str());
         }
@@ -51,7 +51,7 @@ namespace Socket
 
         if (connect(this->_socket_id, (struct sockaddr*)&address, sizeof(struct sockaddr_in)) < 0)
         {
-            stringstream error;
+            std::stringstream error;
             error << "[connect_to] with [address=" << address << "] Cannot connect to the specified address";
             throw SocketException(error.str());
         }
@@ -85,7 +85,7 @@ namespace Socket
         len *= sizeof(T);
         if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
         {
-            stringstream error;
+            std::stringstream error;
             error << "[send] [len=" << len << "] Data length higher then max buffer len ("
                   << SOCKET_MAX_BUFFER_LEN << ")";
             throw SocketException(error.str());
@@ -106,7 +106,7 @@ namespace Socket
         len *= sizeof(T);
         if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
         {
-            stringstream error;
+            std::stringstream error;
             error << "[receive] [len=" << len << "] Data length higher then max buffer len ("
                   << SOCKET_MAX_BUFFER_LEN << ")";
             throw SocketException(error.str());
@@ -118,23 +118,23 @@ namespace Socket
         return ret;
     }
 
-    void TCP::send_file(string file_name)
+    void TCP::send_file(std::string file_name)
     {
         unsigned long long file_size;
         char chunk[SOCKET_MAX_BUFFER_LEN];
         char sync;
-        fstream fp(file_name.c_str(), ios::in | ios::binary);
+        std::fstream fp(file_name.c_str(), std::ios::in | std::ios::binary);
 
         if (!fp.is_open())
         {
-            stringstream error;
+            std::stringstream error;
             error << "[send_file] with [filename=" << file_name << "] Cannot open the file";
             throw SocketException(error.str());
         }
 
-        fp.seekg(0, ifstream::end);
+        fp.seekg(0, std::ifstream::end);
         file_size = fp.tellg();
-        fp.seekg(0, ifstream::beg);
+        fp.seekg(0, std::ifstream::beg);
         this->send<unsigned long long>(&file_size, 1);
 
         for (unsigned long long i = 0; i < file_size / SOCKET_MAX_BUFFER_LEN; i++)
@@ -154,16 +154,16 @@ namespace Socket
         fp.close();
     }
 
-    void TCP::receive_file(string file_name)
+    void TCP::receive_file(std::string file_name)
     {
         unsigned long long file_size;
         char chunk[SOCKET_MAX_BUFFER_LEN];
         char sync;
-        fstream fp(file_name.c_str(), ios::out | ios::binary);
+        std::fstream fp(file_name.c_str(), std::ios::out | std::ios::binary);
 
         if (!fp.is_open())
         {
-            stringstream error;
+            std::stringstream error;
             error << "[send_file] with [filename=" << file_name << "] Cannot open the file";
             throw SocketException(error.str());
         }

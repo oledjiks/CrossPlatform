@@ -23,28 +23,26 @@
 
 #define SOCKET_MAX_BUFFER_LEN 1024
 
-using namespace std;
-
 namespace Socket
 {
     typedef int SocketId;
-    typedef string Ip;
+    typedef std::string Ip;
     typedef unsigned int Port;
 #ifdef WINDOWS
     typedef unsigned int socklen_t;
 #endif
 
-    class SocketException : public exception
+    class SocketException : public std::exception
     {
     private:
-        string _error;
+        std::string _error;
 
     public:
-        SocketException(const string&);
+        SocketException(const std::string&);
         ~SocketException() throw();
 
         virtual const char* what() const throw();
-        friend ostream& operator<< (ostream &out, SocketException &e);
+        friend std::ostream& operator<< (std::ostream &out, SocketException &e);
     };
 
     struct Address : protected sockaddr_in
@@ -65,7 +63,7 @@ namespace Socket
         Port port(void);
         Port port(Port);
 
-        friend ostream& operator<< (ostream&, Address&);
+        friend std::ostream& operator<< (std::ostream&, Address&);
     };
 
     template <class DataType>
@@ -104,7 +102,7 @@ namespace Socket
         void open(void);
         void close(void);
 
-        void listen_on_port(Port);
+        virtual void listen_on_port(Port);
     };
 
     class UDP : public CommonSocket
@@ -117,14 +115,17 @@ namespace Socket
         template <class T> int send(Address, const T*, size_t);
         template <class T> int send(Ip, Port, T);
         template <class T> int send(Address, T);
-        template <class T> int send(Ip, Port, vector<T>);
-        template <class T> int send(Address, vector<T>);
+        template <class T> int send(Ip, Port, std::vector<T>);
+        template <class T> int send(Address, std::vector<T>);
 
+    protected:
         template <class T> int receive(Address*, T*, size_t, unsigned int*);
+
+    public:
         template <class T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_LEN);
         template <class T, size_t N> Datagram<T[N]> receive(size_t len = N);
         template <class T> Datagram<T> receive(void);
-        template <class T> Datagram<vector<T> > receive(size_t);
+        template <class T> Datagram<std::vector<T> > receive(size_t);
     };
 
     class TCP : public CommonSocket
@@ -147,8 +148,8 @@ namespace Socket
         template <class T> int send(const T*, size_t);
         template <class T> int receive(T*, size_t);
 
-        void send_file(string);
-        void receive_file(string);
+        void send_file(std::string);
+        void receive_file(std::string);
     };
 }
 

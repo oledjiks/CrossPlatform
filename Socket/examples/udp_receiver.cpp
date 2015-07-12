@@ -14,7 +14,7 @@ int main(void)
     {
         Socket::UDP sock;
         double buffer[SOCKET_MAX_BUFFER_LEN];
-        int i;
+        unsigned int i;
 
         sock.listen_on_port(10000);
 
@@ -44,7 +44,7 @@ int main(void)
             cout << rec_vec.data[i].something << " - " << rec_vec.data[i].somethingelse << endl;
         cout << endl;
 
-        cout << "from: " << rec_vec.address << endl; // I know could be always different, just for the sake of simplicity
+        cout << "from: " << rec_vec.address << endl; // maybe always different, just for the sake of simplicity
 
         sock.close();
     }

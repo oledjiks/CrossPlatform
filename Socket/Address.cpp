@@ -51,7 +51,7 @@ namespace Socket
 
         if (address == INADDR_NONE)
         {
-            stringstream error;
+            std::stringstream error;
             error << "[ip] with [ip=" << ip << "] Invalid ip address provided";
             throw SocketException(error.str());
         }
@@ -62,7 +62,7 @@ namespace Socket
 #else
         if (inet_aton(ip.c_str(), &this->sin_addr) == 0)
         {
-            stringstream error;
+            std::stringstream error;
             error << "[ip] with [ip=" << ip << "] Invalid ip address provided";
             throw SocketException(error.str());
         }
@@ -81,7 +81,7 @@ namespace Socket
         return this->port();
     }
 
-    ostream& operator<< (ostream &out, Address &address)
+    std::ostream& operator<< (std::ostream &out, Address &address)
     {
         out << address.ip() << ":" << address.port();
         return out;

@@ -82,7 +82,7 @@ namespace Socket
 
         if (bind(this->_socket_id, (struct sockaddr*)&address, sizeof(struct sockaddr)) == -1)
         {
-            stringstream error;
+            std::stringstream error;
             error << "[listen_on_port] with [port=" << port << "] Cannot bind socket";
             throw SocketException(error.str());
         }

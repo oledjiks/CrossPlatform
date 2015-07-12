@@ -5,7 +5,7 @@
 
 namespace Socket
 {
-    SocketException::SocketException(const string &message)
+    SocketException::SocketException(const std::string &message)
     {
         this->_error = message;
     }
@@ -19,7 +19,7 @@ namespace Socket
         return this->_error.c_str();
     }
 
-    ostream& operator<< (ostream &out, SocketException &e)
+    std::ostream& operator<< (std::ostream &out, SocketException &e)
     {
         out << e.what();
         return out;
