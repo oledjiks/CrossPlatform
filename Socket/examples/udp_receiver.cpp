@@ -15,7 +15,10 @@ int main(void)
         Socket::UDP sock;
         double buffer[SOCKET_MAX_BUFFER_LEN];
         unsigned int i;
+        int buffer_size = SOCKET_MAX_BUFFER_LEN;
 
+        // sock.set_option(SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(char)); // throw ERROR
+        sock.set_option(SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(buffer_size));
         sock.listen_on_port(10000);
 
         Socket::Datagram<string>            rec_str = sock.receive<string>();

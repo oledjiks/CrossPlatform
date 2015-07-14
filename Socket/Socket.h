@@ -21,7 +21,10 @@
 #include <netdb.h>
 #endif
 
-#define SOCKET_MAX_BUFFER_LEN 1024
+#define SOCKET_MAX_BUFFER_LEN   1024
+#ifndef WINDOWS
+#define SOCKET_ERROR			(-1)
+#endif
 
 namespace Socket
 {
@@ -103,6 +106,7 @@ namespace Socket
         void close(void);
 
         virtual void listen_on_port(Port);
+        int set_option(int, int, const char *, socklen_t);
     };
 
     class UDP : public CommonSocket
