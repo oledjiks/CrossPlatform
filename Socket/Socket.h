@@ -32,7 +32,7 @@ namespace Socket
     typedef std::string Ip;
     typedef unsigned int Port;
 #ifdef WINDOWS
-    typedef unsigned int socklen_t;
+    typedef int socklen_t;
 #endif
 
     class SocketException : public std::exception

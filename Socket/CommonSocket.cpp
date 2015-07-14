@@ -15,8 +15,8 @@ namespace Socket
     void CommonSocket::_socket(void)
     {
 #ifdef WINDOWS
-        this->_num_sockets++;
-        if (this->_num_sockets == 1)
+        _num_sockets++;
+        if (_num_sockets == 1)
         {
             WSADATA wsaData;
             if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -53,7 +53,7 @@ namespace Socket
     {
         if (!this->_opened)
         {
-            if ((this->_socket_id = socket(AF_INET, this->_socket_type, 0)) == unsigned(-1))
+            if ((this->_socket_id = socket(AF_INET, this->_socket_type, 0)) == -1)
                 throw SocketException("[open] Cannot create socket");
             this->_opened = true;
             this->_binded = false;
@@ -163,9 +163,9 @@ namespace Socket
         {
             std::stringstream error;
 #if __cplusplus == 201103
-            error << "[set_option] " << optname_str[optname] << " error";
+            error << "[set_option] error (" << optname_str[optname] << ")";
 #else
-            error << "[set_option] error";
+            error << "[set_option] error (" << optname << ")";
 #endif
             throw SocketException(error.str());
         }

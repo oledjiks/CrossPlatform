@@ -101,11 +101,7 @@ namespace Socket
         int received_bytes;
         socklen_t size = sizeof(struct sockaddr);
 
-#ifdef WINDOWS
-        if ((received_bytes = recvfrom(this->_socket_id, (char*)data, len, 0, (struct sockaddr*)address, (int*)&size)) == -1)
-#else
         if ((received_bytes = recvfrom(this->_socket_id, (char*)data, len, 0, (struct sockaddr*)address, (socklen_t*)&size)) == -1)
-#endif
         {
             throw SocketException("[receive] Cannot receive");
         }
