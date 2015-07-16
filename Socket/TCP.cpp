@@ -33,7 +33,7 @@ namespace Socket
 
     void TCP::listen_on_port(Port port, unsigned int listeners)
     {
-        CommonSocket::listen_on_port(port);
+        CommonSocket::bind_on_port(port);
 
         if (listen(this->_socket_id, listeners) != 0)
         {

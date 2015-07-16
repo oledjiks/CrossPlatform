@@ -19,7 +19,7 @@ int main(void)
 
         // sock.set_option(SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(char)); // throw ERROR
         sock.set_option(SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(buffer_size));
-        sock.listen_on_port(10000);
+        sock.bind_on_port(10000);
 
         Socket::Datagram<string>            rec_str = sock.receive<string>();
         Socket::Datagram<int[5]>            rec_arr = sock.receive<int, 5>(); // ([, 5]);

@@ -92,6 +92,7 @@ namespace Socket
 
     protected:
         SocketId _socket_id;
+        fd_set _rset;
         int _socket_type;
         bool _opened;
         bool _binded;
@@ -105,7 +106,7 @@ namespace Socket
         void open(void);
         void close(void);
 
-        virtual void listen_on_port(Port);
+        virtual void bind_on_port(Port);
         int set_option(int, int, const char *, socklen_t);
     };
 
