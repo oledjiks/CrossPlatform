@@ -85,7 +85,7 @@ namespace Socket
     }
 
     template <class T>
-    int UDP::receive(Address *address, T *data, size_t len, unsigned int *received_elements)
+    inline int UDP::receive(Address *address, T *data, size_t len, unsigned int *received_elements)
     {
         if (!this->_opened) this->open();
         if (!this->_binded) throw SocketException("[receive] Make the socket listening before receiving");
@@ -158,6 +158,141 @@ namespace Socket
 
         ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
         for (int i = 0; i < ret.received_elements; i++) ret.data.push_back(buffer[i]);
+
+        return ret;
+    }
+
+    template <class T>
+    Datagram<T*> UDP::receive_timeout(unsigned int sec, T *buffer, size_t len)
+    {
+        Datagram<T*> ret;
+        int ready;
+        struct timeval timeout = {sec, 0};
+
+        FD_ZERO(&this->_rset);
+        FD_SET(this->_socket_id, &this->_rset);
+
+        ready = ::select(this->_socket_id+1, &this->_rset, NULL, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[receive_timeout] SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(_socket_id, &_rset))
+            {
+                ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
+                ret.data = buffer;
+            }
+        }
+
+        return ret;
+    }
+
+    template <class T, size_t N>
+    Datagram<T[N]> UDP::receive_timeout(unsigned int sec, size_t len)
+    {
+        Datagram<T[N]> ret;
+        int ready;
+        struct timeval timeout = {sec, 0};
+
+        FD_ZERO(&this->_rset);
+        FD_SET(this->_socket_id, &this->_rset);
+
+        ready = ::select(this->_socket_id+1, &this->_rset, NULL, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(_socket_id, &_rset))
+            {
+                ret.received_bytes = this->receive<T>(&ret.address, &ret.data, len, &ret.received_elements);
+            }
+        }
+
+        return ret;
+    }
+
+    template <class T>
+    Datagram<T> UDP::receive_timeout(unsigned int sec)
+    {
+        Datagram<T> ret;
+        int ready;
+        struct timeval timeout = {sec, 0};
+
+        FD_ZERO(&this->_rset);
+        FD_SET(this->_socket_id, &this->_rset);
+
+        ready = ::select(this->_socket_id+1, &this->_rset, NULL, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(_socket_id, &_rset))
+            {
+                ret.received_bytes = this->receive<T>(&ret.address, &ret.data, 1, &ret.received_elements);
+            }
+        }
+
+        return ret;
+    }
+
+    template <>
+    Datagram<std::string> UDP::receive_timeout<std::string>(unsigned int sec)
+    {
+        Datagram<std::string> ret;
+        char buffer[SOCKET_MAX_BUFFER_LEN];
+        int ready;
+        struct timeval timeout = {sec, 0};
+
+        FD_ZERO(&this->_rset);
+        FD_SET(this->_socket_id, &this->_rset);
+
+        ready = ::select(this->_socket_id+1, &this->_rset, NULL, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(_socket_id, &_rset))
+            {
+                ret.received_bytes = this->receive<char>(&ret.address, buffer, SOCKET_MAX_BUFFER_LEN, &ret.received_elements);
+                ret.data = buffer;
+            }
+        }
+
+        return ret;
+    }
+
+    template <class T>
+    Datagram<std::vector<T> > UDP::receive_timeout(unsigned int sec, size_t len)
+    {
+        Datagram<std::vector<T> > ret;
+        T buffer[len];
+        int ready;
+        struct timeval timeout = {sec, 0};
+
+        FD_ZERO(&this->_rset);
+        FD_SET(this->_socket_id, &this->_rset);
+
+        ready = ::select(this->_socket_id+1, &this->_rset, NULL, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(_socket_id, &_rset))
+            {
+                ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
+                for (int i = 0; i < ret.received_elements; i++) ret.data.push_back(buffer[i]);
+            }
+        }
 
         return ret;
     }

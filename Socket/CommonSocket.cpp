@@ -28,18 +28,18 @@ namespace Socket
     CommonSocket::CommonSocket(void)
     {
         CommonSocket::_socket();
-        FD_ZERO(&_rset);
+        FD_ZERO(&this->_rset);
     }
 
     CommonSocket::CommonSocket(int socket_type)
     {
         CommonSocket::_socket();
+        FD_ZERO(&this->_rset);
 
         this->_socket_type = socket_type;
         this->_opened = false;
         this->_binded = false;
         this->open();
-        FD_ZERO(&_rset);
     }
 
     CommonSocket::~CommonSocket(void)
@@ -60,6 +60,7 @@ namespace Socket
             this->_opened = true;
             this->_binded = false;
         }
+        FD_SET(this->_socket_id, &this->_rset);
     }
 
     void CommonSocket::close(void)
@@ -93,7 +94,6 @@ namespace Socket
         }
 
         this->_binded = true;
-        FD_SET(this->_socket_id, &this->_rset);
     }
 
     int CommonSocket::set_option(int level, int optname, const char *optval, socklen_t optlen)

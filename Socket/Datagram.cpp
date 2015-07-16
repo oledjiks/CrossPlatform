@@ -6,6 +6,11 @@
 namespace Socket
 {
     template <class DataType>
+    Datagram<DataType>::Datagram() : received_bytes(0), received_elements(0)
+    {
+    }
+
+    template <class DataType>
     template <class T>
     void Datagram<DataType>::operator= (const Datagram<T> &datagram)
     {
