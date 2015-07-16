@@ -79,7 +79,7 @@ namespace Socket
     void CommonSocket::bind_on_port(Port port)
     {
         if (this->_binded)
-            throw SocketException("[listen_on_port] Socket already binded to a port, close the socket before to re-bind");
+            throw SocketException("[bind_on_port] Socket already binded to a port, close the socket before to re-bind");
 
         if (!this->_opened)
             this->open();
@@ -89,7 +89,7 @@ namespace Socket
         if (bind(this->_socket_id, (struct sockaddr*)&address, sizeof(struct sockaddr)) == -1)
         {
             std::stringstream error;
-            error << "[listen_on_port] with [port=" << port << "] Cannot bind socket";
+            error << "[bind_on_port] with [port=" << port << "] Cannot bind socket";
             throw SocketException(error.str());
         }
 

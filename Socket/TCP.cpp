@@ -114,7 +114,7 @@ namespace Socket
 
         int ret;
         if ((ret = recv(this->_socket_id, (char *)buffer, len, 0)) == -1)
-            throw SocketException("[send] Cannot receive");
+            throw SocketException("[receive] Cannot receive");
         return ret;
     }
 
@@ -164,7 +164,7 @@ namespace Socket
         if (!fp.is_open())
         {
             std::stringstream error;
-            error << "[send_file] with [filename=" << file_name << "] Cannot open the file";
+            error << "[receive_file] with [filename=" << file_name << "] Cannot open/create the file";
             throw SocketException(error.str());
         }
 
