@@ -7,6 +7,8 @@ namespace Socket
 {
     TCP::TCP(void) : CommonSocket(SOCK_STREAM)
     {
+        this->_client_num = 0;
+        this->_clients_address = std::vector<Address>();
     }
 
     TCP::TCP(const TCP &tcp) : CommonSocket()
@@ -14,6 +16,36 @@ namespace Socket
         this->_socket_id = tcp._socket_id;
         this->_opened = tcp._opened;
         this->_binded = tcp._binded;
+        this->_socket_type = tcp._socket_type;
+        this->_address = tcp._address;
+        this->_client_num = tcp._client_num;
+        for (size_t i = 0; i < this->_client_num; ++i)
+            this->_clients[i] = tcp._clients[i];
+        for (size_t i = 0; i < tcp._clients_address.size(); ++i)
+            this->_clients_address[i] = tcp._clients_address[i];
+    }
+
+    void TCP::close(void)
+    {
+        if (this->_opened)
+        {
+#ifdef WINDOWS
+            closesocket(this->_socket_id);
+#else
+            shutdown(this->_socket_id, SHUT_RDWR);
+#endif
+            for (unsigned int i = 0; i < this->_client_num; ++i)
+            {
+#ifdef WINDOWS
+                closesocket(this->_clients[i]);
+#else
+                shutdown(this->_clients[i], SHUT_RDWR);
+#endif
+            }
+        }
+
+        this->_opened = false;
+        this->_binded = false;
     }
 
     Ip TCP::ip(void)
@@ -64,14 +96,24 @@ namespace Socket
         TCP ret;
         socklen_t len = sizeof(struct sockaddr_in);
 
+        if (this->_client_num > FD_SETSIZE)
+            return ret;
+
         ret.close();
-#ifdef WINDOWS
-        ret._socket_id = accept(this->_socket_id, (struct sockaddr*)&ret._address, (int *)&len);
-#else
-        ret._socket_id = accept(this->_socket_id, (struct sockaddr*)&ret._address, &len);
-#endif
+        ret._socket_id = accept(this->_socket_id, (struct sockaddr*)&ret._address, (socklen_t *)&len);
         ret._opened = true;
         ret._binded = true;
+
+        this->_clients[this->_client_num] = ret._socket_id;
+        ++(this->_client_num);
+        this->_clients_address.push_back(ret._address);
+
+#ifdef _DEBUG
+        std::stringstream ss;
+        ss << "in accept_client() _client_num is: " << this->_client_num
+           << "\tclient: " << ret.ip() << ":" << ret.port() << std::endl;
+        std::cout << ss.str();
+#endif
 
         return ret;
     }
@@ -185,6 +227,101 @@ namespace Socket
         }
 
         fp.close();
+    }
+
+    template <class T>
+    int TCP::select_receive(SocketId* client_id, Address* from, T* buffer, size_t len)
+    {
+        int ready;
+        int ret;
+        SocketId maxfd = 0;
+        fd_set client_rset;
+        struct timeval tv = {0, 10000};
+
+#ifdef _DEBUG
+        std::stringstream ss;
+#endif
+
+        if (!this->_binded)
+            return SOCKET_ERROR;
+        if (!this->_opened)
+            return SOCKET_ERROR;
+
+        while (1)
+        {
+            size_t client_num = this->_client_num; // for thread safe (client_num should be less then this->_client_num)
+            FD_ZERO(&client_rset);
+            for (unsigned int i = 0; i < client_num; ++i)
+            {
+                maxfd = (maxfd < (this->_clients)[i]) ? (this->_clients)[i] : maxfd;
+                FD_SET((this->_clients)[i], &client_rset);
+            }
+
+            ready = ::select(maxfd+1, &client_rset, NULL, NULL, &tv);
+
+            // select() error
+            if (ready == SOCKET_ERROR)
+                return SOCKET_ERROR;
+
+            // timeout
+            if (ready == 0)
+                continue;
+
+            // something to read
+#ifdef _DEBUG
+            ss << "select() return: " << ready << std::endl;
+            std::cout << ss.str();
+#endif
+            for (unsigned int i = 0; i < client_num; ++i)
+            {
+                if (FD_ISSET((this->_clients)[i], &client_rset))
+                {
+                    *client_id = (this->_clients)[i];
+                    *from = this->_clients_address[i];
+                    ret = recv((this->_clients)[i], (char *)buffer, len, 0);
+#ifdef _DEBUG
+                    ss << "recvfrom() return: " << ret << std::endl;
+                    std::cout << ss.str();
+#endif
+                    if (ret == 0 || (ret == SOCKET_ERROR
+#ifdef WINDOWS
+                                     && WSAGetLastError() == WSAECONNRESET
+#else
+#endif
+                            ))
+                    {
+                        // Client socket closed
+#ifdef WINDOWS
+                        closesocket((this->_clients)[i]);
+#else
+                        shutdown((this->_clients)[i], SHUT_RDWR);
+#endif
+
+#ifdef _DEBUG
+                        ss << "client (" << (this->_clients)[i] << ") close" << std::endl;
+                        std::cout << ss.str();
+#endif
+                        for (unsigned int j = i; j < this->_client_num - 1; ++j)
+                        {
+                            (this->_clients)[j] = (this->_clients)[j+1];
+                        }
+                        --(this->_client_num);
+                        this->_clients_address.erase(this->_clients_address.begin() + i);
+
+#ifdef _DEBUG
+                        ss << "in select_receive() _client_num is: " << this->_client_num << std::endl;
+                        std::cout << ss.str();
+#endif
+                        break;
+                    }
+                    else
+                    {
+                        // Receive something from client
+                    }
+                }
+            }
+            return ret;
+        }
     }
 }
 

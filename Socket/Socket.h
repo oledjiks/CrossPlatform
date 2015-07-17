@@ -14,6 +14,7 @@
 
 #ifdef WINDOWS
 #include <winsock.h>
+#pragma comment(lib,"ws2_32.lib")
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -38,7 +39,7 @@ namespace Socket
     class SocketException : public std::exception
     {
     private:
-        std::string _error;
+        std::string         _error;
 
     public:
         SocketException(const std::string&);
@@ -73,10 +74,10 @@ namespace Socket
     struct Datagram
     {
     public:
-        Address address;
-        DataType data;
-        unsigned int received_bytes;
-        unsigned int received_elements;
+        Address             address;
+        DataType            data;
+        unsigned int        received_bytes;
+        unsigned int        received_elements;
 
         Datagram();
 
@@ -93,10 +94,10 @@ namespace Socket
         static void _socket(void);
 
     protected:
-        SocketId _socket_id;
-        int _socket_type;
-        bool _opened;
-        bool _binded;
+        SocketId            _socket_id;
+        int                 _socket_type;
+        bool                _opened;
+        bool                _binded;
 
     public:
         CommonSocket(void);
@@ -142,10 +143,14 @@ namespace Socket
     class TCP : public CommonSocket
     {
     private:
-        Address _address;
+        Address              _address;
+        int                  _clients[FD_SETSIZE];
+		size_t               _client_num;
+        std::vector<Address> _clients_address;
     public:
         TCP(void);
         TCP(const TCP&);
+        void close(void);
 
         Ip ip(void);
         Port port(void);
@@ -161,6 +166,8 @@ namespace Socket
 
         void send_file(std::string);
         void receive_file(std::string);
+
+        template <class T> int select_receive(SocketId*, Address*, T*, size_t);
     };
 }
 

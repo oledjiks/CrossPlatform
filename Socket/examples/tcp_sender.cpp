@@ -1,4 +1,5 @@
 #include "../Socket.h"
+#include <string>
 
 using namespace std;
 
@@ -13,8 +14,18 @@ int main(void)
         Socket::TCP client;
         client.connect_to(Socket::Address(IP, PORT));
 
-        cout << "sending ..." << endl;
-        client.send_file("input.bmp");
+        // cout << "sending ..." << endl;
+        // client.send_file("input.bmp");
+
+        string str_buffer;
+        while (1)
+        {
+            cout << "input message string: ";
+            if (!(cin >> str_buffer))
+                break;
+            client.send(str_buffer.c_str(), str_buffer.length());
+        }
+        client.close();
     }
     catch (Socket::SocketException &e)
     {

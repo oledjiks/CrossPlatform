@@ -106,7 +106,6 @@ namespace Socket
             {SO_KEEPALIVE , "SO_KEEPALIVE"},
             {SO_DONTROUTE , "SO_DONTROUTE"},
             {SO_BROADCAST , "SO_BROADCAST"},
-            {SO_USELOOPBACK , "SO_USELOOPBACK"},
             {SO_LINGER , "SO_LINGER"},
             {SO_OOBINLINE , "SO_OOBINLINE"},
             {SO_SNDBUF , "SO_SNDBUF"},
@@ -118,6 +117,7 @@ namespace Socket
             {SO_ERROR , "SO_ERROR"},
             {SO_TYPE , "SO_TYPE"},
 #ifdef WINDOWS
+            {SO_USELOOPBACK , "SO_USELOOPBACK"},
             {SO_BSP_STATE , "SO_BSP_STATE"},
             {SO_GROUP_ID , "SO_GROUP_ID"},
             {SO_GROUP_PRIORITY , "SO_GROUP_PRIORITY"},
@@ -138,7 +138,6 @@ namespace Socket
             {IP_MULTICAST_LOOP , "IP_MULTICAST_LOOP"},
             {IP_ADD_MEMBERSHIP , "IP_ADD_MEMBERSHIP"},
             {IP_DROP_MEMBERSHIP , "IP_DROP_MEMBERSHIP"},
-            {IP_DONTFRAGMENT , "IP_DONTFRAGMENT"},
             {IP_ADD_SOURCE_MEMBERSHIP , "IP_ADD_SOURCE_MEMBERSHIP"},
             {IP_DROP_SOURCE_MEMBERSHIP , "IP_DROP_SOURCE_MEMBERSHIP"},
             {IP_BLOCK_SOURCE , "IP_BLOCK_SOURCE"},
@@ -146,6 +145,7 @@ namespace Socket
             {IP_PKTINFO , "IP_PKTINFO"},
             {IP_UNICAST_IF , "IP_UNICAST_IF"},
 #ifdef WINDOWS
+            {IP_DONTFRAGMENT , "IP_DONTFRAGMENT"},
             {IP_HOPLIMIT , "IP_HOPLIMIT"},
             {IP_RECEIVE_BROADCAST , "IP_RECEIVE_BROADCAST"},
             {IP_RECVIF , "IP_RECVIF"},

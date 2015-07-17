@@ -168,7 +168,7 @@ namespace Socket
         Datagram<T*> ret;
         fd_set rset;
         int ready;
-        struct timeval timeout = {sec, 0};
+        struct timeval timeout = {(time_t)sec, 0};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
@@ -196,7 +196,7 @@ namespace Socket
         Datagram<T[N]> ret;
         fd_set rset;
         int ready;
-        struct timeval timeout = {sec, 0};
+        struct timeval timeout = {(time_t)sec, 0};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
@@ -223,7 +223,7 @@ namespace Socket
         Datagram<T> ret;
         fd_set rset;
         int ready;
-        struct timeval timeout = {sec, 0};
+        struct timeval timeout = {(time_t)sec, 0};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
@@ -251,7 +251,7 @@ namespace Socket
         char buffer[SOCKET_MAX_BUFFER_LEN];
         fd_set rset;
         int ready;
-        struct timeval timeout = {sec, 0};
+        struct timeval timeout = {(time_t)sec, 0};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
@@ -280,7 +280,7 @@ namespace Socket
         T buffer[len];
         fd_set rset;
         int ready;
-        struct timeval timeout = {sec, 0};
+        struct timeval timeout = {(time_t)sec, 0};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
