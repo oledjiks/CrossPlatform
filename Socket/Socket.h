@@ -94,7 +94,6 @@ namespace Socket
 
     protected:
         SocketId _socket_id;
-        fd_set _rset;
         int _socket_type;
         bool _opened;
         bool _binded;

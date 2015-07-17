@@ -28,13 +28,11 @@ namespace Socket
     CommonSocket::CommonSocket(void)
     {
         CommonSocket::_socket();
-        FD_ZERO(&this->_rset);
     }
 
     CommonSocket::CommonSocket(int socket_type)
     {
         CommonSocket::_socket();
-        FD_ZERO(&this->_rset);
 
         this->_socket_type = socket_type;
         this->_opened = false;
@@ -60,7 +58,6 @@ namespace Socket
             this->_opened = true;
             this->_binded = false;
         }
-        FD_SET(this->_socket_id, &this->_rset);
     }
 
     void CommonSocket::close(void)
