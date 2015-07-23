@@ -7,7 +7,7 @@ namespace Socket
 {
     TCP::TCP(void) : CommonSocket(SOCK_STREAM)
     {
-        this->_client_num = 0;
+        this->_clients_num = 0;
         this->_clients_address = std::vector<Address>();
     }
 
@@ -18,8 +18,8 @@ namespace Socket
         this->_binded = tcp._binded;
         this->_socket_type = tcp._socket_type;
         this->_address = tcp._address;
-        this->_client_num = tcp._client_num;
-        for (size_t i = 0; i < this->_client_num; ++i)
+        this->_clients_num = tcp._clients_num;
+        for (size_t i = 0; i < this->_clients_num; ++i)
             this->_clients[i] = tcp._clients[i];
         for (size_t i = 0; i < tcp._clients_address.size(); ++i)
             this->_clients_address[i] = tcp._clients_address[i];
@@ -33,13 +33,15 @@ namespace Socket
             closesocket(this->_socket_id);
 #else
             shutdown(this->_socket_id, SHUT_RDWR);
+            ::close(this->_socket_id);
 #endif
-            for (unsigned int i = 0; i < this->_client_num; ++i)
+            for (unsigned int i = 0; i < this->_clients_num; ++i)
             {
 #ifdef WINDOWS
                 closesocket(this->_clients[i]);
 #else
                 shutdown(this->_clients[i], SHUT_RDWR);
+                ::close(this->_clients[i]);
 #endif
             }
         }
@@ -70,7 +72,7 @@ namespace Socket
         if (listen(this->_socket_id, listeners) != 0)
         {
             std::stringstream error;
-            error << "[listen_on_port] with [port=" << port << "] [listeners=" << listeners << "] Cannot bind socket";
+            error << "[listen_on_port] with [port=" << port << "] [listeners=" << listeners << "] Cannot listen";
             throw SocketException(error.str());
         }
     }
@@ -96,7 +98,7 @@ namespace Socket
         TCP ret;
         socklen_t len = sizeof(struct sockaddr_in);
 
-        if (this->_client_num > FD_SETSIZE)
+        if (this->_clients_num > FD_SETSIZE)
             return ret;
 
         ret.close();
@@ -104,18 +106,31 @@ namespace Socket
         ret._opened = true;
         ret._binded = true;
 
-        this->_clients[this->_client_num] = ret._socket_id;
-        ++(this->_client_num);
-        this->_clients_address.push_back(ret._address);
+        return ret;
+    }
+
+    int TCP::accept_all(void)
+    {
+        SocketId client_id;
+        Address client_address;
+        socklen_t len = sizeof(struct sockaddr_in);
+
+        if (this->_clients_num > FD_SETSIZE)
+            return SOCKET_ERROR;
+
+        client_id = accept(this->_socket_id, (struct sockaddr*)&client_address, (socklen_t *)&len);
+
+        this->_clients[this->_clients_num] = client_id;
+        ++(this->_clients_num);
+        this->_clients_address.push_back(client_address);
 
 #ifdef _DEBUG
         std::stringstream ss;
-        ss << "in accept_client() _client_num is: " << this->_client_num
-           << "\tclient: " << ret.ip() << ":" << ret.port() << std::endl;
+        ss << "in accept_client() _clients_num is: " << this->_clients_num
+           << "\tclient: " << client_address.ip() << ":" << client_address.port() << std::endl;
         std::cout << ss.str();
 #endif
-
-        return ret;
+        return client_id;
     }
 
     template <class T>
@@ -155,7 +170,7 @@ namespace Socket
         }
 
         int ret;
-        if ((ret = recv(this->_socket_id, (char *)buffer, len, 0)) == -1)
+        if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == -1)
             throw SocketException("[receive] Cannot receive");
         return ret;
     }
@@ -230,7 +245,7 @@ namespace Socket
     }
 
     template <class T>
-    int TCP::select_receive(SocketId* client_id, Address* from, T* buffer, size_t len)
+    int TCP::select_receive_all(SocketId* client_id, Address* from, T* buffer, size_t len)
     {
         int ready;
         int ret;
@@ -249,12 +264,16 @@ namespace Socket
 
         while (1)
         {
-            size_t client_num = this->_client_num; // for thread safe (client_num should be less then this->_client_num)
-            FD_ZERO(&client_rset);
-            for (unsigned int i = 0; i < client_num; ++i)
+            size_t clients_num; // for thread safe (clients_num should be less then this->_clients_num)
             {
-                maxfd = (maxfd < (this->_clients)[i]) ? (this->_clients)[i] : maxfd;
-                FD_SET((this->_clients)[i], &client_rset);
+                // TODO: thread safe
+                clients_num = this->_clients_num;
+                FD_ZERO(&client_rset);
+                for (unsigned int i = 0; i < clients_num; ++i)
+                {
+                    maxfd = (maxfd < (this->_clients)[i]) ? (this->_clients)[i] : maxfd;
+                    FD_SET((this->_clients)[i], &client_rset);
+                }
             }
 
             ready = ::select(maxfd+1, &client_rset, NULL, NULL, &tv);
@@ -272,13 +291,13 @@ namespace Socket
             ss << "select() return: " << ready << std::endl;
             std::cout << ss.str();
 #endif
-            for (unsigned int i = 0; i < client_num; ++i)
+            for (unsigned int i = 0; i < clients_num; ++i)
             {
                 if (FD_ISSET((this->_clients)[i], &client_rset))
                 {
                     *client_id = (this->_clients)[i];
                     *from = this->_clients_address[i];
-                    ret = recv((this->_clients)[i], (char *)buffer, len, 0);
+                    ret = ::recv((this->_clients)[i], (char *)buffer, len, 0);
 #ifdef _DEBUG
                     ss << "recvfrom() return: " << ret << std::endl;
                     std::cout << ss.str();
@@ -301,15 +320,17 @@ namespace Socket
                         ss << "client (" << (this->_clients)[i] << ") close" << std::endl;
                         std::cout << ss.str();
 #endif
-                        for (unsigned int j = i; j < this->_client_num - 1; ++j)
                         {
-                            (this->_clients)[j] = (this->_clients)[j+1];
+                            // TODO: thread safe
+                            for (unsigned int j = i; j < this->_clients_num - 1; ++j)
+                            {
+                                (this->_clients)[j] = (this->_clients)[j+1];
+                            }
+                            --(this->_clients_num);
+                            this->_clients_address.erase(this->_clients_address.begin() + i);
                         }
-                        --(this->_client_num);
-                        this->_clients_address.erase(this->_clients_address.begin() + i);
-
 #ifdef _DEBUG
-                        ss << "in select_receive() _client_num is: " << this->_client_num << std::endl;
+                        ss << "in select_receive() _clients_num is: " << this->_clients_num << std::endl;
                         std::cout << ss.str();
 #endif
                         break;

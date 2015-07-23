@@ -20,6 +20,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <unistd.h>
 #endif
 
 #define SOCKET_MAX_BUFFER_LEN   1024
@@ -145,7 +146,7 @@ namespace Socket
     private:
         Address              _address;
         int                  _clients[FD_SETSIZE];
-		size_t               _client_num;
+		size_t               _clients_num;
         std::vector<Address> _clients_address;
     public:
         TCP(void);
@@ -167,7 +168,8 @@ namespace Socket
         void send_file(std::string);
         void receive_file(std::string);
 
-        template <class T> int select_receive(SocketId*, Address*, T*, size_t);
+        int accept_all(void);
+        template <class T> int select_receive_all(SocketId*, Address*, T*, size_t);
     };
 }
 
