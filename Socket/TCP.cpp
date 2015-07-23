@@ -175,6 +175,86 @@ namespace Socket
         return ret;
     }
 
+    template <class T>
+    int TCP::send_timeout(unsigned int sec, const T* buffer, size_t len)
+    {
+        if (!this->_binded) throw SocketException("[send] Socket not binded");
+        if (!this->_opened) throw SocketException("[send] Socket not opened");
+
+        len *= sizeof(T);
+        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        {
+            std::stringstream error;
+            error << "[send] [len=" << len << "] Data length higher then max buffer len ("
+                  << SOCKET_MAX_BUFFER_LEN << ")";
+            throw SocketException(error.str());
+        }
+
+        int ret = -1;
+        int ready;
+        fd_set wset;
+        struct timeval timeout = {(time_t)sec, 0};
+
+        FD_ZERO(&wset);
+        FD_SET(this->_socket_id, &wset);
+
+        ready = ::select(this->_socket_id+1, NULL, &wset, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[send_timeout] select() return SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(this->_socket_id, &wset))
+            {
+                if ((ret = ::send(buffer, len)) == -1)
+                    throw SocketException("[send_timeout] Cannot send");
+            }
+        }
+
+        return ret;
+    }
+
+    template <class T>
+    int TCP::receive_timeout(unsigned int sec, T* buffer, size_t len)
+    {
+        if (!this->_binded) throw SocketException("[send] Socket not binded");
+        if (!this->_opened) throw SocketException("[send] Socket not opened");
+
+        len *= sizeof(T);
+        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        {
+            std::stringstream error;
+            error << "[send] [len=" << len << "] Data length higher then max buffer len ("
+                  << SOCKET_MAX_BUFFER_LEN << ")";
+            throw SocketException(error.str());
+        }
+
+        int ret = -1;
+        int ready;
+        fd_set rset;
+        struct timeval timeout = {(time_t)sec, 0};
+
+        FD_ZERO(&rset);
+        FD_SET(this->_socket_id, &rset);
+
+        ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
+        if (ready == SOCKET_ERROR)
+        {
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
+        }
+        else if (ready > 0)
+        {
+            if (FD_ISSET(this->_socket_id, &rset))
+            {
+                if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == -1)
+                    throw SocketException("[receive_timeout] Cannot receive");
+            }
+        }
+
+        return ret;
+    }
+
     void TCP::send_file(std::string file_name)
     {
         unsigned long long file_size;
