@@ -171,8 +171,8 @@ namespace Socket
         void send_file(std::string);
         void receive_file(std::string);
 
-        int accept_all(void);
-        template <class T> int select_receive_all(SocketId*, Address*, T*, size_t);
+        int accept_all(void) throw();
+        template <class T> int select_receive_all(SocketId*, Address*, T*, size_t) throw();
     };
 }
 

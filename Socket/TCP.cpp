@@ -109,30 +109,6 @@ namespace Socket
         return ret;
     }
 
-    int TCP::accept_all(void)
-    {
-        SocketId client_id;
-        Address client_address;
-        socklen_t len = sizeof(struct sockaddr_in);
-
-        if (this->_clients_num > FD_SETSIZE)
-            return SOCKET_ERROR;
-
-        client_id = accept(this->_socket_id, (struct sockaddr*)&client_address, (socklen_t *)&len);
-
-        this->_clients[this->_clients_num] = client_id;
-        ++(this->_clients_num);
-        this->_clients_address.push_back(client_address);
-
-#ifdef _DEBUG
-        std::stringstream ss;
-        ss << "in accept_client() _clients_num is: " << this->_clients_num
-           << "\tclient: " << client_address.ip() << ":" << client_address.port() << std::endl;
-        std::cout << ss.str();
-#endif
-        return client_id;
-    }
-
     template <class T>
     int TCP::send(const T* buffer, size_t len)
     {
@@ -324,8 +300,35 @@ namespace Socket
         fp.close();
     }
 
+    int TCP::accept_all(void) throw()
+    {
+        SocketId client_id;
+        Address client_address;
+        socklen_t len = sizeof(struct sockaddr_in);
+
+        if (this->_clients_num > FD_SETSIZE)
+            return SOCKET_ERROR;
+
+        client_id = accept(this->_socket_id, (struct sockaddr*)&client_address, (socklen_t *)&len);
+
+        {
+            // TODO: thread safe
+            this->_clients[this->_clients_num] = client_id;
+            ++(this->_clients_num);
+            this->_clients_address.push_back(client_address);
+        }
+
+#ifdef _DEBUG
+        std::stringstream ss;
+        ss << "in accept_client() _clients_num is: " << this->_clients_num
+           << "\tclient: " << client_address.ip() << ":" << client_address.port() << std::endl;
+        std::cout << ss.str();
+#endif
+        return client_id;
+    }
+
     template <class T>
-    int TCP::select_receive_all(SocketId* client_id, Address* from, T* buffer, size_t len)
+    int TCP::select_receive_all(SocketId* client_id, Address* from, T* buffer, size_t len) throw()
     {
         int ready;
         int ret;
@@ -402,7 +405,7 @@ namespace Socket
 #endif
                         {
                             // TODO: thread safe
-                            for (unsigned int j = i; j < this->_clients_num - 1; ++j)
+                            for (unsigned int j = i; j < FD_SETSIZE - 1; ++j)
                             {
                                 (this->_clients)[j] = (this->_clients)[j+1];
                             }
