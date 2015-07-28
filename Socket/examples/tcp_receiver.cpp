@@ -1,5 +1,3 @@
-#define _DEBUG
-
 #include "../Socket.h"
 #include <thread>
 
