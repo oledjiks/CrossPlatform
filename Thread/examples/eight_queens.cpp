@@ -123,7 +123,7 @@ void place_queens_multithread(size_t board_size, unsigned int thread_num)
 
     for (unsigned int col = 0; col < board_size; ++col)
     {
-        pool.enqueue([&] {
+        pool.enqueue([&] () {
                 Queens queens(board_size);
                 queens._chessboard[board_size - 1] = col;
                 queens._column_flag[col] = 1;
@@ -138,13 +138,18 @@ void place_queens_multithread(size_t board_size, unsigned int thread_num)
 
 int main(int argc, char *argv[])
 {
+    int n;
+    cout << "input n: ";
+    cin >> n;
     auto start1 = get_current_performance_timer();
-    Queens test_queens(8);
+    Queens test_queens(n);
     test_queens.place_all_queens();
     auto end1 = get_current_performance_timer();
 
+    cout << "input n: ";
+    cin >> n;
     auto start2 = get_current_performance_timer();
-    place_queens_multithread(8, 8);
+    place_queens_multithread(n, 8);
     auto end2 = get_current_performance_timer();
 
     cout << "time: " << end1 - start1 << endl;
