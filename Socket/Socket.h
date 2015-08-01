@@ -144,10 +144,8 @@ namespace Socket
     class TCP : public CommonSocket
     {
     private:
-        Address              _address;
-        int                  _clients[FD_SETSIZE];
-		size_t               _clients_num;
-        std::vector<Address> _clients_address;
+        Address                               _address;
+        std::vector<std::pair<int, Address> > _clients;
     public:
         TCP(void);
         TCP(const TCP&);

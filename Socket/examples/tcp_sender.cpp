@@ -1,4 +1,5 @@
 #include "../Socket.h"
+#include <iostream>
 #include <string>
 
 using namespace std;
@@ -11,6 +12,7 @@ int main(void)
 {
     try
     {
+        cout << "-------- Simple prototype --------" << endl;
         {
             // Simple prototype
             Socket::TCP client;
@@ -18,8 +20,14 @@ int main(void)
 
             cout << "sending ..." << endl;
             client.send_file("input.bmp");
+            client.close();
+            cout << "Client1 close\n";
         }
 
+        cout << endl
+             << "-------- Multi I/O prototype --------" << endl
+             << "Any key to continue ...";
+        getchar();
         {
             // Multi I/O prototype
             Socket::TCP client;

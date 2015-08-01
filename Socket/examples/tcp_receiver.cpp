@@ -1,4 +1,5 @@
 #include "../Socket.h"
+#include <iostream>
 #include <thread>
 
 using namespace std;
@@ -40,6 +41,7 @@ int main(void)
 {
     try
     {
+        cout << "-------- Simple prototype --------" << endl;
         {
             // Simple prototype
             Socket::TCP server;
@@ -53,6 +55,8 @@ int main(void)
             cout << "Server1 close\n";
         }
 
+        cout << endl
+             << "-------- Multi I/O prototype --------" << endl;
         {
             // Multi I/O prototype
             Socket::TCP server;
