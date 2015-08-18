@@ -11,18 +11,17 @@ using namespace std;
 void receiving_all_msg(Socket::TCP& server)
 {
     int len;
-    Socket::SocketId client_id;
-    Socket::Address from;
+    Socket::TCP client;
     char buffer[SOCKET_MAX_BUFFER_LEN];
 
     while (1)
     {
-        len = server.select_receive_all<char>(&client_id, &from, buffer, SOCKET_MAX_BUFFER_LEN-1);
+        len = server.select_receive_all<char>(client, buffer, SOCKET_MAX_BUFFER_LEN-1);
         if (len > 0)
         {
             buffer[len] = '\0';
-            cout << "--> [TCP] client (" << client_id
-                 << ")"<< from.ip() << ":" << from.port()
+            cout << "--> [TCP] client (" << client.get_socket_id()
+                 << ")"<< client.ip() << ":" << client.port()
                  << " <" << len << "> " << buffer << endl;
         }
     }
@@ -30,9 +29,11 @@ void receiving_all_msg(Socket::TCP& server)
 
 void accepting_all_client(Socket::TCP& server)
 {
+    Socket::TCP client;
+
     while (1)
     {
-        if (server.accept_all() == SOCKET_ERROR)
+        if (server.accept_all(client) == SOCKET_ERROR)
             break;
     }
 }

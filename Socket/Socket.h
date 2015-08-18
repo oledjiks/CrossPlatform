@@ -1,3 +1,14 @@
+/* @file           Socket.h
+ * @copyright      HangZhou Hikvision System Technology Co., Ltd. All Right Reserved.
+ * @brief          Machine Vision Component Socket class
+ *
+ * @author         zhenglinjun
+ * @date           2015-08-01
+ *
+ * @note
+ *
+ * @warning
+ */
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
 
@@ -21,6 +32,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <errno.h>
 #endif
 
 #define SOCKET_MAX_BUFFER_LEN   1024
@@ -106,6 +118,8 @@ namespace Socket
 
         ~CommonSocket(void);
 
+        SocketId get_socket_id(void);
+
         void open(void);
         void close(void);
 
@@ -169,8 +183,8 @@ namespace Socket
         void send_file(std::string);
         void receive_file(std::string);
 
-        int accept_all(void) throw();
-        template <class T> int select_receive_all(SocketId*, Address*, T*, size_t) throw();
+        int accept_all(TCP&) throw();
+        template <class T> int select_receive_all(TCP&, T*, size_t) throw();
     };
 }
 

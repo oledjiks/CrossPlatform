@@ -49,6 +49,11 @@ namespace Socket
 #endif
     }
 
+    SocketId CommonSocket::get_socket_id(void)
+    {
+        return this->_socket_id;
+    }
+
     void CommonSocket::open(void)
     {
         if (!this->_opened)

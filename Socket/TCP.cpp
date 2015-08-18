@@ -62,7 +62,13 @@ namespace Socket
 
     void TCP::listen_on_port(Port port, unsigned int listeners)
     {
-        CommonSocket::bind_on_port(port);
+        if (this->_binded)
+        {
+            if (this->_address.port() != port)
+                throw SocketException("[listen_on_port] Socket listen to a port different from binded");
+        }
+        else
+            CommonSocket::bind_on_port(port);
 
         if (listen(this->_socket_id, listeners) != 0)
         {
@@ -295,33 +301,32 @@ namespace Socket
         fp.close();
     }
 
-    int TCP::accept_all(void) throw()
+    int TCP::accept_all(TCP& client) throw()
     {
-        SocketId client_id;
-        Address client_address;
         socklen_t len = sizeof(struct sockaddr_in);
 
         if (this->_clients.size() >= FD_SETSIZE)
             return SOCKET_ERROR;
 
-        client_id = accept(this->_socket_id, (struct sockaddr*)&client_address, (socklen_t *)&len);
+        client.close();
+        client._socket_id = accept(this->_socket_id, (struct sockaddr*)&client._address, (socklen_t *)&len);
 
         {
             // TODO: thread safe
-            this->_clients.push_back(std::make_pair(client_id, client_address));
+            this->_clients.push_back(std::make_pair(client._socket_id, client._address));
         }
 
 #ifdef _DEBUG
         std::stringstream ss;
         ss << "in accept_client() clients number is: " << this->_clients.size()
-           << "\t accepted client: " << client_address.ip() << ":" << client_address.port() << std::endl;
+           << "\t accepted client: " << client._address.ip() << ":" << client._address.port() << std::endl;
         std::cout << ss.str();
 #endif
-        return client_id;
+        return client._socket_id;
     }
 
     template <class T>
-    int TCP::select_receive_all(SocketId* client_id, Address* from, T* buffer, size_t len) throw()
+    int TCP::select_receive_all(TCP& client, T* buffer, size_t len) throw()
     {
         int ready;
         int ret;
@@ -371,8 +376,8 @@ namespace Socket
             {
                 if (FD_ISSET(this->_clients[i].first, &client_rset))
                 {
-                    *client_id = this->_clients[i].first;
-                    *from = this->_clients[i].second;
+                    client._socket_id = this->_clients[i].first;
+                    client._address = this->_clients[i].second;
                     ret = ::recv(this->_clients[i].first, (char *)buffer, len, 0);
 #ifdef _DEBUG
                     ss << "recvfrom() return: " << ret << std::endl;
@@ -382,6 +387,7 @@ namespace Socket
 #ifdef WINDOWS
                                      && WSAGetLastError() == WSAECONNRESET
 #else
+                                     && errno == ECONNRESET
 #endif
                             ))
                     {
