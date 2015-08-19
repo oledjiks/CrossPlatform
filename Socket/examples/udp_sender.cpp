@@ -26,11 +26,6 @@ int main(void)
         double darr[5] = { 0.0, 1.0, 2.0, 3.0, 4.0 };
         sock.send<double>(to, darr, 5);
 
-        vector<prova> vec;
-        for (int i = 0; i < 5; i++)
-            vec.push_back({ i, (float)(i + 1) });
-        sock.send<prova>(to, vec);
-
         sock.close();
     }
     catch (Socket::SocketException &e)

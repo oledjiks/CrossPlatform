@@ -137,8 +137,6 @@ namespace Socket
         template <class T> int send(Address, const T*, size_t);
         template <class T> int send(Ip, Port, T);
         template <class T> int send(Address, T);
-        template <class T> int send(Ip, Port, std::vector<T>);
-        template <class T> int send(Address, std::vector<T>);
 
     protected:
         template <class T> inline int receive(Address*, T*, size_t, unsigned int*);
@@ -147,12 +145,10 @@ namespace Socket
         template <class T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_LEN);
         template <class T, size_t N> Datagram<T[N]> receive(size_t len = N);
         template <class T> Datagram<T> receive(void);
-        template <class T> Datagram<std::vector<T> > receive(size_t);
 
         template <class T> Datagram<T*> receive_timeout(unsigned int, T*, size_t len = SOCKET_MAX_BUFFER_LEN);
         template <class T, size_t N> Datagram<T[N]> receive_timeout(unsigned int, size_t len = N);
         template <class T> Datagram<T> receive_timeout(unsigned int);
-        template <class T> Datagram<std::vector<T> > receive_timeout(unsigned int, size_t);
     };
 
     class TCP : public CommonSocket

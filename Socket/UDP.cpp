@@ -73,18 +73,6 @@ namespace Socket
     }
 
     template <class T>
-    int UDP::send(Ip ip, Port port, std::vector<T> data)
-    {
-        return this->send<T>(ip, port, data.data(), data.size());
-    }
-
-    template <class T>
-    int UDP::send(Address address, std::vector<T> data)
-    {
-        return this->send<T>(address.ip(), address.port(), data.data(), data.size());
-    }
-
-    template <class T>
     inline int UDP::receive(Address *address, T *data, size_t len, unsigned int *received_elements)
     {
         if (!this->_opened) this->open();
@@ -146,18 +134,6 @@ namespace Socket
 
         ret.received_bytes = this->receive<char>(&ret.address, buffer, SOCKET_MAX_BUFFER_LEN, &ret.received_elements);
         ret.data = buffer;
-
-        return ret;
-    }
-
-    template <class T>
-    Datagram<std::vector<T> > UDP::receive(size_t len)
-    {
-        Datagram<std::vector<T> > ret;
-        T buffer[len];
-
-        ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
-        for (int i = 0; i < ret.received_elements; i++) ret.data.push_back(buffer[i]);
 
         return ret;
     }
@@ -267,35 +243,6 @@ namespace Socket
             {
                 ret.received_bytes = this->receive<char>(&ret.address, buffer, SOCKET_MAX_BUFFER_LEN, &ret.received_elements);
                 ret.data = buffer;
-            }
-        }
-
-        return ret;
-    }
-
-    template <class T>
-    Datagram<std::vector<T> > UDP::receive_timeout(unsigned int sec, size_t len)
-    {
-        Datagram<std::vector<T> > ret;
-        T buffer[len];
-        fd_set rset;
-        int ready;
-        struct timeval timeout = {(time_t)sec, 0};
-
-        FD_ZERO(&rset);
-        FD_SET(this->_socket_id, &rset);
-
-        ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
-        if (ready == SOCKET_ERROR)
-        {
-            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
-        }
-        else if (ready > 0)
-        {
-            if (FD_ISSET(_socket_id, &rset))
-            {
-                ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
-                for (int i = 0; i < ret.received_elements; i++) ret.data.push_back(buffer[i]);
             }
         }
 
