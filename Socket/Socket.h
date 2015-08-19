@@ -36,9 +36,12 @@
 #include <cstring>
 #endif
 
-#define SOCKET_MAX_BUFFER_LEN   1024
 #ifndef WINDOWS
-#define SOCKET_ERROR			(-1)
+#define SOCKET_ERROR              (-1)
+#endif
+
+#ifndef SOCKET_MAX_BUFFER_BYTES
+#define SOCKET_MAX_BUFFER_BYTES   4096
 #endif
 
 namespace Socket
@@ -75,10 +78,10 @@ namespace Socket
         Address(struct sockaddr_in);
         Address(const Address&);
 
-        Ip ip(void);
+        Ip ip(void) const;
         Ip ip(Ip);
 
-        Port port(void);
+        Port port(void) const;
         Port port(Port);
 
         friend std::ostream& operator<< (std::ostream&, Address&);
@@ -135,19 +138,20 @@ namespace Socket
         UDP(const UDP&);
 
         template <class T> int send(Ip, Port, const T*, size_t);
-        template <class T> int send(Address, const T*, size_t);
+        template <class T> int send(const Address&, const T*, size_t);
         template <class T> int send(Ip, Port, T);
-        template <class T> int send(Address, T);
-
-    protected:
-        template <class T> inline int receive(Address*, T*, size_t, unsigned int*);
+        template <class T> int send(const Address&, T);
 
     public:
-        template <class T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_LEN);
+        template <class T> inline int receive(Address&, T*, size_t, unsigned int&);
+        template <class T> inline int receive_timeout(unsigned int, Address&, T*, size_t, unsigned int&);
+
+    public:
+        template <class T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
         template <class T, size_t N> Datagram<T[N]> receive(size_t len = N);
         template <class T> Datagram<T> receive(void);
 
-        template <class T> Datagram<T*> receive_timeout(unsigned int, T*, size_t len = SOCKET_MAX_BUFFER_LEN);
+        template <class T> Datagram<T*> receive_timeout(unsigned int, T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
         template <class T, size_t N> Datagram<T[N]> receive_timeout(unsigned int, size_t len = N);
         template <class T> Datagram<T> receive_timeout(unsigned int);
     };

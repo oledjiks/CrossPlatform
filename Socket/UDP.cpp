@@ -22,10 +22,11 @@ namespace Socket
         if (!this->_opened) this->open();
 
         len *= sizeof(T);
-        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
-            error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data << "] [len=" << len << "] Data length higher then max buffer len";
+            error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data
+                  << "] [len=" << len << "] Data length higher then max buffer len";
             throw SocketException(error.str());
         }
 
@@ -35,7 +36,8 @@ namespace Socket
         if ((ret = sendto(this->_socket_id, (const char*)data, len, 0, (struct sockaddr*)&address, sizeof(struct sockaddr))) == -1)
         {
             std::stringstream error;
-            error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data << "] [len=" << len << "] Cannot send";
+            error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data
+                  << "] [len=" << len << "] Cannot send";
             throw SocketException(error.str());
         }
 
@@ -43,7 +45,7 @@ namespace Socket
     }
 
     template <class T>
-    int UDP::send(Address address, const T *data, size_t len)
+    int UDP::send(const Address& address, const T *data, size_t len)
     {
         return this->send<T>(address.ip(), address.port(), data, len);
     }
@@ -55,7 +57,7 @@ namespace Socket
     }
 
     template <class T>
-    int UDP::send(Address address, T data)
+    int UDP::send(const Address& address, T data)
     {
         return this->send<T>(address.ip(), address.port(), &data, 1);
     }
@@ -67,34 +69,35 @@ namespace Socket
     }
 
     template <>
-    int UDP::send<std::string>(Address address, std::string data)
+    int UDP::send<std::string>(const Address& address, std::string data)
     {
         return this->send<char>(address.ip(), address.port(), data.c_str(), data.length() + 1);
     }
 
     template <class T>
-    inline int UDP::receive(Address *address, T *data, size_t len, unsigned int *received_elements)
+    inline int UDP::receive(Address& address, T *data, size_t len, unsigned int& received_elements)
     {
         if (!this->_opened) this->open();
         if (!this->_binded) throw SocketException("[receive] Make the socket listening before receiving");
 
         len *= sizeof(T);
-        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
-            error << "[send] with [buffer=" << data << "] [len=" << len << "] Data length higher then max buffer length";
+            error << "[receive] with [buffer=" << data << "] [len=" << len
+                  << "] Data length higher then max buffer length";
             throw SocketException(error.str());
         }
 
         int received_bytes;
         socklen_t size = sizeof(struct sockaddr);
 
-        if ((received_bytes = recvfrom(this->_socket_id, (char*)data, len, 0, (struct sockaddr*)address, (socklen_t*)&size)) == -1)
+        if ((received_bytes = recvfrom(this->_socket_id, (char*)data, len, 0, (struct sockaddr*)&address, (socklen_t*)&size)) == SOCKET_ERROR)
         {
             throw SocketException("[receive] Cannot receive");
         }
 
-        *received_elements = (unsigned int)(received_bytes / sizeof(T));
+        received_elements = (unsigned int)(received_bytes / sizeof(T));
 
         return received_bytes;
     }
@@ -104,7 +107,7 @@ namespace Socket
     {
         Datagram<T*> ret;
 
-        ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
+        ret.received_bytes = this->receive<T>(ret.address, buffer, len, ret.received_elements);
         ret.data = buffer;
 
         return ret;
@@ -114,7 +117,7 @@ namespace Socket
     Datagram<T[N]> UDP::receive(size_t len)
     {
         Datagram<T[N]> ret;
-        ret.received_bytes = this->receive<T>(&ret.address, ret.data, len, &ret.received_elements);
+        ret.received_bytes = this->receive<T>(ret.address, ret.data, len, ret.received_elements);
         return ret;
     }
 
@@ -122,7 +125,7 @@ namespace Socket
     Datagram<T> UDP::receive(void)
     {
         Datagram<T> ret;
-        ret.received_bytes = this->receive<T>(&ret.address, &ret.data, 1, &ret.received_elements);
+        ret.received_bytes = this->receive<T>(ret.address, &ret.data, 1, ret.received_elements);
         return ret;
     }
 
@@ -130,21 +133,34 @@ namespace Socket
     Datagram<std::string> UDP::receive<std::string>(void)
     {
         Datagram<std::string> ret;
-        char buffer[SOCKET_MAX_BUFFER_LEN];
+        char buffer[SOCKET_MAX_BUFFER_BYTES];
 
-        ret.received_bytes = this->receive<char>(&ret.address, buffer, SOCKET_MAX_BUFFER_LEN, &ret.received_elements);
+        ret.received_bytes = this->receive<char>(ret.address, buffer, SOCKET_MAX_BUFFER_BYTES, ret.received_elements);
         ret.data = buffer;
 
         return ret;
     }
 
     template <class T>
-    Datagram<T*> UDP::receive_timeout(unsigned int sec, T *buffer, size_t len)
+    inline int UDP::receive_timeout(unsigned int ms, Address& address, T* data, size_t len, unsigned int& received_elements)
     {
-        Datagram<T*> ret;
+        if (!this->_opened) this->open();
+        if (!this->_binded) throw SocketException("[receive_timeout] Make the socket listening before receiving");
+
+        len *= sizeof(T);
+        if (len > SOCKET_MAX_BUFFER_BYTES)
+        {
+            std::stringstream error;
+            error << "[receive_timeout] with [buffer=" << data << "] [len=" << len
+                  << "] Data length higher then max buffer length";
+            throw SocketException(error.str());
+        }
+
+        int received_bytes = 0;
+        socklen_t size = sizeof(struct sockaddr);
         fd_set rset;
         int ready;
-        struct timeval timeout = {(time_t)sec, 0};
+        struct timeval timeout = {(time_t)(ms/1000), ms%1000};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
@@ -152,99 +168,64 @@ namespace Socket
         ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
         if (ready == SOCKET_ERROR)
         {
-            throw SocketException("[receive_timeout] SOCKET_ERROR");
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
         }
         else if (ready > 0)
         {
-            if (FD_ISSET(_socket_id, &rset))
+            if (FD_ISSET(this->_socket_id, &rset))
             {
-                ret.received_bytes = this->receive<T>(&ret.address, buffer, len, &ret.received_elements);
-                ret.data = buffer;
+                received_bytes = recvfrom(this->_socket_id, (char*)data, len, 0, (struct sockaddr*)&address, (socklen_t*)&size);
+                if (received_bytes == SOCKET_ERROR)
+                {
+                    throw SocketException("[receive_timeout] Cannot receive");
+                }
+
+                received_elements = (unsigned int)(received_bytes / sizeof(T));
             }
         }
+
+        return received_bytes;
+    }
+
+    template <class T>
+    Datagram<T*> UDP::receive_timeout(unsigned int ms, T *buffer, size_t len)
+    {
+        Datagram<T*> ret;
+
+        ret.receive_bytes = this->receive_timeout<T>(ms, ret.address, buffer, len, ret.received_elements);
+        ret.data = buffer;
 
         return ret;
     }
 
     template <class T, size_t N>
-    Datagram<T[N]> UDP::receive_timeout(unsigned int sec, size_t len)
+    Datagram<T[N]> UDP::receive_timeout(unsigned int ms, size_t len)
     {
         Datagram<T[N]> ret;
-        fd_set rset;
-        int ready;
-        struct timeval timeout = {(time_t)sec, 0};
 
-        FD_ZERO(&rset);
-        FD_SET(this->_socket_id, &rset);
-
-        ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
-        if (ready == SOCKET_ERROR)
-        {
-            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
-        }
-        else if (ready > 0)
-        {
-            if (FD_ISSET(_socket_id, &rset))
-            {
-                ret.received_bytes = this->receive<T>(&ret.address, &ret.data, len, &ret.received_elements);
-            }
-        }
+        ret.receive_bytes = this->receive_timeout<T>(ms, ret.address, ret.data, len, ret.received_elements);
 
         return ret;
     }
 
     template <class T>
-    Datagram<T> UDP::receive_timeout(unsigned int sec)
+    Datagram<T> UDP::receive_timeout(unsigned int ms)
     {
         Datagram<T> ret;
-        fd_set rset;
-        int ready;
-        struct timeval timeout = {(time_t)sec, 0};
 
-        FD_ZERO(&rset);
-        FD_SET(this->_socket_id, &rset);
-
-        ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
-        if (ready == SOCKET_ERROR)
-        {
-            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
-        }
-        else if (ready > 0)
-        {
-            if (FD_ISSET(_socket_id, &rset))
-            {
-                ret.received_bytes = this->receive<T>(&ret.address, &ret.data, 1, &ret.received_elements);
-            }
-        }
+        ret.receive_bytes = this->receive_timeout<T>(ms, ret.address, ret.data, 1, ret.received_elements);
 
         return ret;
     }
 
     template <>
-    Datagram<std::string> UDP::receive_timeout<std::string>(unsigned int sec)
+    Datagram<std::string> UDP::receive_timeout<std::string>(unsigned int ms)
     {
         Datagram<std::string> ret;
-        char buffer[SOCKET_MAX_BUFFER_LEN];
-        fd_set rset;
-        int ready;
-        struct timeval timeout = {(time_t)sec, 0};
+        char buffer[SOCKET_MAX_BUFFER_BYTES];
 
-        FD_ZERO(&rset);
-        FD_SET(this->_socket_id, &rset);
-
-        ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
-        if (ready == SOCKET_ERROR)
-        {
-            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
-        }
-        else if (ready > 0)
-        {
-            if (FD_ISSET(_socket_id, &rset))
-            {
-                ret.received_bytes = this->receive<char>(&ret.address, buffer, SOCKET_MAX_BUFFER_LEN, &ret.received_elements);
-                ret.data = buffer;
-            }
-        }
+        ret.received_bytes = this->receive_timeout<char>(ms, ret.address, buffer, SOCKET_MAX_BUFFER_BYTES, ret.received_elements);
+        ret.data = buffer;
 
         return ret;
     }

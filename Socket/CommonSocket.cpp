@@ -44,6 +44,8 @@ namespace Socket
         if (this->_num_sockets == 0)
             WSACleanup();
 #endif
+        if (this->_opened)
+            this->close();
     }
 
     SocketId CommonSocket::get_socket_id(void)
@@ -100,7 +102,7 @@ namespace Socket
     {
         int ret;
 
-        if ((ret = ::setsockopt(_socket_id, level, optname, (const char *)optval, optlen)) == SOCKET_ERROR)
+        if ((ret = ::setsockopt(this->_socket_id, level, optname, (const char *)optval, optlen)) == SOCKET_ERROR)
         {
             std::stringstream error;
             error << "[set_option] error";

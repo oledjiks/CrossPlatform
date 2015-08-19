@@ -39,7 +39,7 @@ namespace Socket
         this->sin_port = address.sin_port;
     }
 
-    Ip Address::ip(void)
+    Ip Address::ip(void) const
     {
         return inet_ntoa(this->sin_addr);
     }
@@ -70,7 +70,7 @@ namespace Socket
         return this->ip();
     }
 
-    Port Address::port(void)
+    Port Address::port(void) const
     {
         return ntohs(this->sin_port);
     }
