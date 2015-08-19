@@ -33,6 +33,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
+#include <cstring>
 #endif
 
 #define SOCKET_MAX_BUFFER_LEN   1024

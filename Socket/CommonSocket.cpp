@@ -2,9 +2,6 @@
 #define _COMMON_SOCKET_CPP_
 
 #include "Socket.h"
-#if __cplusplus == 201103
-#include <unordered_map>
-#endif
 
 namespace Socket
 {
@@ -103,76 +100,10 @@ namespace Socket
     {
         int ret;
 
-#if __cplusplus == 201103
-        std::unordered_map<int, std::string> optname_str = {
-            // SOL_SOCKET options
-            {SO_DEBUG , "SO_DEBUG"},
-            {SO_ACCEPTCONN , "SO_ACCEPTCONN"},
-            {SO_REUSEADDR , "SO_REUSEADDR"},
-            {SO_KEEPALIVE , "SO_KEEPALIVE"},
-            {SO_DONTROUTE , "SO_DONTROUTE"},
-            {SO_BROADCAST , "SO_BROADCAST"},
-            {SO_LINGER , "SO_LINGER"},
-            {SO_OOBINLINE , "SO_OOBINLINE"},
-            {SO_SNDBUF , "SO_SNDBUF"},
-            {SO_RCVBUF , "SO_RCVBUF"},
-            {SO_SNDLOWAT , "SO_SNDLOWAT"},
-            {SO_RCVLOWAT , "SO_RCVLOWAT"},
-            {SO_SNDTIMEO , "SO_SNDTIMEO"},
-            {SO_RCVTIMEO , "SO_RCVTIMEO"},
-            {SO_ERROR , "SO_ERROR"},
-            {SO_TYPE , "SO_TYPE"},
-#ifdef WINDOWS
-            {SO_USELOOPBACK , "SO_USELOOPBACK"},
-            {SO_BSP_STATE , "SO_BSP_STATE"},
-            {SO_GROUP_ID , "SO_GROUP_ID"},
-            {SO_GROUP_PRIORITY , "SO_GROUP_PRIORITY"},
-            {SO_MAX_MSG_SIZE , "SO_MAX_MSG_SIZE"},
-            {SO_CONDITIONAL_ACCEPT , "SO_CONDITIONAL_ACCEPT"},
-            {SO_PAUSE_ACCEPT , "SO_PAUSE_ACCEPT"},
-            {SO_COMPARTMENT_ID , "SO_COMPARTMENT_ID"},
-            {SO_RANDOMIZE_PORT , "SO_RANDOMIZE_PORT"},
-#endif
-
-            // PROTOCOL_IP options
-            {IP_OPTIONS , "IP_OPTIONS"},
-            {IP_HDRINCL , "IP_HDRINCL"},
-            {IP_TOS , "IP_TOS"},
-            {IP_TTL , "IP_TTL"},
-            {IP_MULTICAST_IF , "IP_MULTICAST_IF"},
-            {IP_MULTICAST_TTL , "IP_MULTICAST_TTL"},
-            {IP_MULTICAST_LOOP , "IP_MULTICAST_LOOP"},
-            {IP_ADD_MEMBERSHIP , "IP_ADD_MEMBERSHIP"},
-            {IP_DROP_MEMBERSHIP , "IP_DROP_MEMBERSHIP"},
-            {IP_ADD_SOURCE_MEMBERSHIP , "IP_ADD_SOURCE_MEMBERSHIP"},
-            {IP_DROP_SOURCE_MEMBERSHIP , "IP_DROP_SOURCE_MEMBERSHIP"},
-            {IP_BLOCK_SOURCE , "IP_BLOCK_SOURCE"},
-            {IP_UNBLOCK_SOURCE , "IP_UNBLOCK_SOURCE"},
-            {IP_PKTINFO , "IP_PKTINFO"},
-            {IP_UNICAST_IF , "IP_UNICAST_IF"},
-#ifdef WINDOWS
-            {IP_DONTFRAGMENT , "IP_DONTFRAGMENT"},
-            {IP_HOPLIMIT , "IP_HOPLIMIT"},
-            {IP_RECEIVE_BROADCAST , "IP_RECEIVE_BROADCAST"},
-            {IP_RECVIF , "IP_RECVIF"},
-            {IP_RECVDSTADDR , "IP_RECVDSTADDR"},
-            {IP_IFLIST , "IP_IFLIST"},
-            {IP_ADD_IFLIST , "IP_ADD_IFLIST"},
-            {IP_DEL_IFLIST , "IP_DEL_IFLIST"},
-            {IP_RTHDR , "IP_RTHDR"},
-            {IP_RECVRTHDR , "IP_RECVRTHDR"},
-#endif
-        };
-#endif  // for c++11
-
         if ((ret = ::setsockopt(_socket_id, level, optname, (const char *)optval, optlen)) == SOCKET_ERROR)
         {
             std::stringstream error;
-#if __cplusplus == 201103
-            error << "[set_option] error (" << optname_str[optname] << ")";
-#else
-            error << "[set_option] error (" << optname << ")";
-#endif
+            error << "[set_option] error";
             throw SocketException(error.str());
         }
 
