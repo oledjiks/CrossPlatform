@@ -1,13 +1,62 @@
 #ifndef _TCP_CPP_
 #define _TCP_CPP_
 
+#ifdef WINDOWS
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 #include "Socket.h"
 
 namespace Socket
 {
+    class ScopeLock
+    {
+    private:
+#ifdef WINDOWS
+        HANDLE&          _mutex;
+#else
+        pthread_mutex_t& _mutex;
+#endif
+
+    public:
+#ifdef WINDOWS
+        ScopeLock(HANDLE& m) : _mutex(m)
+        {
+            if (WaitForSingleObject(this->_mutex, INFINITE) != WAIT_OBJECT_0)
+                throw std::exception();
+        }
+#else
+        ScopeLock(pthread_mutex_t& m) : _mutex(m)
+        {
+            if (pthread_mutex_lock(&this->_mutex))
+                throw std::exception();
+        }
+#endif
+
+#ifdef WINDOWS
+        virtual ~ScopeLock()
+        {
+            if (!ReleaseMutex(this->_mutex))
+                throw std::exception();
+        }
+#else
+        virtual ~ScopeLock()
+        {
+            if (pthread_mutex_unlock(&this->_mutex))
+                throw std::exception();
+        }
+#endif
+    };
+
     TCP::TCP(void) : CommonSocket(SOCK_STREAM)
     {
         this->_clients = std::vector<std::pair<int, Address> >();
+#ifdef WINDOWS
+        this->_clients_mutex = CreateMutex(NULL, false, NULL);
+#else
+        pthread_mutex_init(&this->_clients_mutex, NULL);
+#endif
     }
 
     TCP::TCP(const TCP &tcp) : CommonSocket()
@@ -18,6 +67,20 @@ namespace Socket
         this->_socket_type = tcp._socket_type;
         this->_address = tcp._address;
         this->_clients = tcp._clients;
+#ifdef WINDOWS
+        this->_clients_mutex = CreateMutex(NULL, false, NULL);
+#else
+        pthread_mutex_init(&this->_clients_mutex, NULL);
+#endif
+    }
+
+    TCP::~TCP(void)
+    {
+#ifdef WINDOWS
+        CloseHandle(this->_clients_mutex);
+#else
+        pthread_mutex_destroy(&this->_clients_mutex);
+#endif
     }
 
     void TCP::close(void)
@@ -313,7 +376,7 @@ namespace Socket
         client._socket_id = accept(this->_socket_id, (struct sockaddr*)&client._address, (socklen_t *)&len);
 
         {
-            // TODO: thread safe
+            ScopeLock lock(this->_clients_mutex);
             this->_clients.push_back(std::make_pair(client._socket_id, client._address));
         }
 
@@ -344,85 +407,82 @@ namespace Socket
         if (!this->_opened)
             return SOCKET_ERROR;
 
-        while (1)
+        size_t clients_num; // for thread safe (clients_num should be less then this->_clients_num)
         {
-            size_t clients_num; // for thread safe (clients_num should be less then this->_clients_num)
-            {
-                // TODO: thread safe
-                clients_num = this->_clients.size();
-                FD_ZERO(&client_rset);
-                for (unsigned int i = 0; i < clients_num; ++i)
-                {
-                    maxfd = (maxfd < this->_clients[i].first) ? this->_clients[i].first : maxfd;
-                    FD_SET(this->_clients[i].first, &client_rset);
-                }
-            }
-
-            ready = ::select(maxfd+1, &client_rset, NULL, NULL, &tv);
-
-            // select() error
-            if (ready == SOCKET_ERROR)
-                return SOCKET_ERROR;
-
-            // timeout
-            if (ready == 0)
-                continue;
-
-            // something to read
-#ifdef _DEBUG
-            ss << "select() return: " << ready << std::endl;
-            std::cout << ss.str();
-#endif
+            ScopeLock lock(this->_clients_mutex);
+            clients_num = this->_clients.size();
+            FD_ZERO(&client_rset);
             for (unsigned int i = 0; i < clients_num; ++i)
             {
-                if (FD_ISSET(this->_clients[i].first, &client_rset))
-                {
-                    client._socket_id = this->_clients[i].first;
-                    client._address = this->_clients[i].second;
-                    ret = ::recv(this->_clients[i].first, (char *)buffer, len, 0);
+                maxfd = (maxfd < this->_clients[i].first) ? this->_clients[i].first : maxfd;
+                FD_SET(this->_clients[i].first, &client_rset);
+            }
+        }
+
+        ready = ::select(maxfd+1, &client_rset, NULL, NULL, &tv);
+
+        // select() error
+        if (ready == SOCKET_ERROR)
+            return SOCKET_ERROR;
+
+        // timeout
+        if (ready == 0)
+            return 0;
+
+        // something to read
 #ifdef _DEBUG
-                    ss << "recvfrom() return: " << ret << std::endl;
-                    std::cout << ss.str();
+        ss << "select() return: " << ready << std::endl;
+        std::cout << ss.str();
 #endif
-                    if (ret == 0 || (ret == SOCKET_ERROR
-#ifdef WINDOWS
-                                     && WSAGetLastError() == WSAECONNRESET
-#else
-                                     && errno == ECONNRESET
+        for (unsigned int i = 0; i < clients_num; ++i)
+        {
+            if (FD_ISSET(this->_clients[i].first, &client_rset))
+            {
+                client._socket_id = this->_clients[i].first;
+                client._address = this->_clients[i].second;
+                ret = ::recv(this->_clients[i].first, (char *)buffer, len, 0);
+#ifdef _DEBUG
+                ss << "recvfrom() return: " << ret << std::endl;
+                std::cout << ss.str();
 #endif
-                            ))
-                    {
-                        // Client socket closed
+                if (ret == 0 || (ret == SOCKET_ERROR
 #ifdef WINDOWS
-                        closesocket(this->_clients[i].first);
+                                 && WSAGetLastError() == WSAECONNRESET
 #else
-                        shutdown(this->_clients[i].first, SHUT_RDWR);
-                        ::close(this->_clients[i].first);
+                                 && errno == ECONNRESET
+#endif
+                        ))
+                {
+                    // Client socket closed
+#ifdef WINDOWS
+                    closesocket(this->_clients[i].first);
+#else
+                    shutdown(this->_clients[i].first, SHUT_RDWR);
+                    ::close(this->_clients[i].first);
 #endif
 
 #ifdef _DEBUG
-                        ss << "client (socket_id = " << this->_clients[i].first
-                           << ", socket_address = " << this->_clients[i].second << ") closed" << std::endl;
-                        std::cout << ss.str();
+                    ss << "client (socket_id = " << this->_clients[i].first
+                       << ", socket_address = " << this->_clients[i].second << ") closed" << std::endl;
+                    std::cout << ss.str();
 #endif
-                        {
-                            // TODO: thread safe
-                            this->_clients.erase(this->_clients.begin() + i);
-                        }
-#ifdef _DEBUG
-                        ss << "in select_receive() clients number is: " << this->_clients.size() << std::endl;
-                        std::cout << ss.str();
-#endif
-                        break;
-                    }
-                    else
                     {
-                        // Receive something from client
+                        ScopeLock lock(this->_clients_mutex);
+                        this->_clients.erase(this->_clients.begin() + i);
                     }
+#ifdef _DEBUG
+                    ss << "in select_receive() clients number is: " << this->_clients.size() << std::endl;
+                    std::cout << ss.str();
+#endif
+                    break;
+                }
+                else
+                {
+                    // Receive something from client
                 }
             }
-            return ret;
         }
+        return ret;
     }
 }
 

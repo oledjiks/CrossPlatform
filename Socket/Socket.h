@@ -161,9 +161,15 @@ namespace Socket
     private:
         Address                               _address;
         std::vector<std::pair<int, Address> > _clients;
+#ifdef WINDOWS
+        HANDLE                                _clients_mutex;
+#else
+        pthread_mutex_t                       _clients_mutex;
+#endif
     public:
         TCP(void);
         TCP(const TCP&);
+        ~TCP(void);
         void close(void);
 
         Ip ip(void);
