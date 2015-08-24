@@ -39,6 +39,7 @@ namespace Socket
                 ::close(this->_clients[i].first);
 #endif
             }
+            this->_clients.clear();
         }
 
         this->_opened = false;
@@ -117,11 +118,11 @@ namespace Socket
         if (!this->_opened) throw SocketException("[send] Socket not opened");
 
         len *= sizeof(T);
-        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
             error << "[send] [len=" << len << "] Data length higher then max buffer len ("
-                  << SOCKET_MAX_BUFFER_LEN << ")";
+                  << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
@@ -138,11 +139,11 @@ namespace Socket
         if (!this->_opened) throw SocketException("[send_file] Socket not opened");
 
         len *= sizeof(T);
-        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
             error << "[receive] [len=" << len << "] Data length higher then max buffer len ("
-                  << SOCKET_MAX_BUFFER_LEN << ")";
+                  << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
@@ -153,24 +154,24 @@ namespace Socket
     }
 
     template <class T>
-    int TCP::send_timeout(unsigned int sec, const T* buffer, size_t len)
+    int TCP::send_timeout(unsigned int ms, const T* buffer, size_t len)
     {
         if (!this->_binded) throw SocketException("[send] Socket not binded");
         if (!this->_opened) throw SocketException("[send] Socket not opened");
 
         len *= sizeof(T);
-        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
             error << "[send] [len=" << len << "] Data length higher then max buffer len ("
-                  << SOCKET_MAX_BUFFER_LEN << ")";
+                  << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
         int ret = -1;
         int ready;
         fd_set wset;
-        struct timeval timeout = {(time_t)sec, 0};
+        struct timeval timeout = {(time_t)(ms/1000), ms%1000};
 
         FD_ZERO(&wset);
         FD_SET(this->_socket_id, &wset);
@@ -193,24 +194,24 @@ namespace Socket
     }
 
     template <class T>
-    int TCP::receive_timeout(unsigned int sec, T* buffer, size_t len)
+    int TCP::receive_timeout(unsigned int ms, T* buffer, size_t len)
     {
         if (!this->_binded) throw SocketException("[send] Socket not binded");
         if (!this->_opened) throw SocketException("[send] Socket not opened");
 
         len *= sizeof(T);
-        if (len > (SOCKET_MAX_BUFFER_LEN * sizeof(T)))
+        if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
             error << "[send] [len=" << len << "] Data length higher then max buffer len ("
-                  << SOCKET_MAX_BUFFER_LEN << ")";
+                  << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
         int ret = -1;
         int ready;
         fd_set rset;
-        struct timeval timeout = {(time_t)sec, 0};
+        struct timeval timeout = {(time_t)(ms/1000), ms%1000};
 
         FD_ZERO(&rset);
         FD_SET(this->_socket_id, &rset);
@@ -235,7 +236,7 @@ namespace Socket
     void TCP::send_file(std::string file_name)
     {
         unsigned long long file_size;
-        char chunk[SOCKET_MAX_BUFFER_LEN];
+        char chunk[SOCKET_MAX_BUFFER_BYTES];
         char sync;
         std::fstream fp(file_name.c_str(), std::ios::in | std::ios::binary);
 
@@ -251,18 +252,18 @@ namespace Socket
         fp.seekg(0, std::ifstream::beg);
         this->send<unsigned long long>(&file_size, 1);
 
-        for (unsigned long long i = 0; i < file_size / SOCKET_MAX_BUFFER_LEN; i++)
+        for (unsigned long long i = 0; i < file_size / SOCKET_MAX_BUFFER_BYTES; i++)
         {
             this->receive<char>(&sync, 1);
-            fp.read(chunk, SOCKET_MAX_BUFFER_LEN);
-            this->send<char>(chunk, SOCKET_MAX_BUFFER_LEN);
+            fp.read(chunk, SOCKET_MAX_BUFFER_BYTES);
+            this->send<char>(chunk, SOCKET_MAX_BUFFER_BYTES);
         }
 
-        if ((file_size % SOCKET_MAX_BUFFER_LEN) != 0)
+        if ((file_size % SOCKET_MAX_BUFFER_BYTES) != 0)
         {
             this->receive<char>(&sync, 1);
-            fp.read(chunk, file_size % SOCKET_MAX_BUFFER_LEN);
-            this->send<char>(chunk, file_size % SOCKET_MAX_BUFFER_LEN);
+            fp.read(chunk, file_size % SOCKET_MAX_BUFFER_BYTES);
+            this->send<char>(chunk, file_size % SOCKET_MAX_BUFFER_BYTES);
         }
 
         fp.close();
@@ -271,7 +272,7 @@ namespace Socket
     void TCP::receive_file(std::string file_name)
     {
         unsigned long long file_size;
-        char chunk[SOCKET_MAX_BUFFER_LEN];
+        char chunk[SOCKET_MAX_BUFFER_BYTES];
         char sync;
         std::fstream fp(file_name.c_str(), std::ios::out | std::ios::binary);
 
@@ -284,18 +285,18 @@ namespace Socket
 
         this->receive<unsigned long long>(&file_size, 1);
 
-        for(unsigned long long i = 0; i < file_size / SOCKET_MAX_BUFFER_LEN; i++)
+        for(unsigned long long i = 0; i < file_size / SOCKET_MAX_BUFFER_BYTES; i++)
         {
             this->send<char>(&sync, 1);
-            this->receive<char>(chunk, SOCKET_MAX_BUFFER_LEN);
-            fp.write(chunk, SOCKET_MAX_BUFFER_LEN);
+            this->receive<char>(chunk, SOCKET_MAX_BUFFER_BYTES);
+            fp.write(chunk, SOCKET_MAX_BUFFER_BYTES);
         }
 
-        if ((file_size % SOCKET_MAX_BUFFER_LEN) != 0)
+        if ((file_size % SOCKET_MAX_BUFFER_BYTES) != 0)
         {
             this->send<char>(&sync, 1);
-            this->receive<char>(chunk, file_size % SOCKET_MAX_BUFFER_LEN);
-            fp.write(chunk, file_size % SOCKET_MAX_BUFFER_LEN);
+            this->receive<char>(chunk, file_size % SOCKET_MAX_BUFFER_BYTES);
+            fp.write(chunk, file_size % SOCKET_MAX_BUFFER_BYTES);
         }
 
         fp.close();
