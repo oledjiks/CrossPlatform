@@ -13,6 +13,8 @@ int main(void)
     try
     {
         Socket::UDP sock;
+        sock.open();
+
         Socket::Address to("127.0.0.1", 10000);
 
         sock.send<string>(to, "this is the string"); // ("127.0.0.1", 10000, "this is a string");

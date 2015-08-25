@@ -34,7 +34,6 @@ namespace Socket
         this->_socket_type = socket_type;
         this->_opened = false;
         this->_binded = false;
-        this->open();
     }
 
     CommonSocket::~CommonSocket(void)
@@ -44,8 +43,6 @@ namespace Socket
         if (this->_num_sockets == 0)
             WSACleanup();
 #endif
-        if (this->_opened)
-            this->close();
     }
 
     SocketId CommonSocket::get_socket_id(void)

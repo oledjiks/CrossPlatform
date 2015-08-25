@@ -16,6 +16,8 @@ int main(void)
         {
             // Simple prototype
             Socket::TCP client;
+            client.open();
+
             client.connect_to(Socket::Address(IP, PORT));
 
             cout << "sending ..." << endl;
@@ -31,6 +33,7 @@ int main(void)
         {
             // Multi I/O prototype
             Socket::TCP client;
+            client.open();
 
             client.connect_to(Socket::Address(IP, PORT));
 

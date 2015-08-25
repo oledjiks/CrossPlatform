@@ -13,6 +13,8 @@ int main(void)
     try
     {
         Socket::UDP sock;
+        sock.open();
+
         double buffer[SOCKET_MAX_BUFFER_BYTES / sizeof(double)];
         unsigned int i;
         int buffer_size = SOCKET_MAX_BUFFER_BYTES / sizeof(double);

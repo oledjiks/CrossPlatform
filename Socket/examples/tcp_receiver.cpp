@@ -46,6 +46,7 @@ int main(void)
         {
             // Simple prototype
             Socket::TCP server;
+            server.open();
 
             server.listen_on_port(PORT);
             Socket::TCP client = server.accept_client();
@@ -61,6 +62,7 @@ int main(void)
         {
             // Multi I/O prototype
             Socket::TCP server;
+            server.open();
 
             server.listen_on_port(PORT);
 
