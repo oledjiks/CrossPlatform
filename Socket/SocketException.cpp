@@ -17,7 +17,7 @@ namespace Socket
                                     NULL, dw, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                                     // MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                                     (LPSTR)&lpmsg, 0, NULL);
-        sprintf(sz, "%s", lpmsg);
+        sprintf_s(sz, "%s", lpmsg);
         if (len > 2)
             sz[len - 2] = '\0';
         else
