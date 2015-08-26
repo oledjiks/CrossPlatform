@@ -8,8 +8,8 @@ namespace Socket
     void Address::_address(Ip ip, Port port)
     {
         this->sin_family = AF_INET;
-        this->ip(ip);
-        this->port(port);
+        this->set_ip(ip);
+        this->set_port(port);
     }
 
     Address::Address()
@@ -39,12 +39,12 @@ namespace Socket
         this->sin_port = address.sin_port;
     }
 
-    Ip Address::ip(void) const
+    Ip Address::get_ip(void) const
     {
         return inet_ntoa(this->sin_addr);
     }
 
-    Ip Address::ip(Ip ip)
+    Ip Address::set_ip(Ip ip)
     {
 #ifdef WINDOWS
         unsigned long address = inet_addr(ip.c_str());
@@ -67,23 +67,23 @@ namespace Socket
             throw SocketException(error.str());
         }
 #endif
-        return this->ip();
+        return this->get_ip();
     }
 
-    Port Address::port(void) const
+    Port Address::get_port(void) const
     {
         return ntohs(this->sin_port);
     }
 
-    Port Address::port(Port port)
+    Port Address::set_port(Port port)
     {
         this->sin_port = htons(port);
-        return this->port();
+        return this->get_port();
     }
 
     std::ostream& operator<< (std::ostream &out, Address &address)
     {
-        out << address.ip() << ":" << address.port();
+        out << address.get_ip() << ":" << address.get_port();
         return out;
     }
 }

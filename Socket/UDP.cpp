@@ -47,7 +47,7 @@ namespace Socket
     template <class T>
     int UDP::send(const Address& address, const T *data, size_t len)
     {
-        return this->send<T>(address.ip(), address.port(), data, len);
+        return this->send<T>(address.get_ip(), address.get_port(), data, len);
     }
 
     template <class T>
@@ -59,7 +59,7 @@ namespace Socket
     template <class T>
     int UDP::send(const Address& address, T data)
     {
-        return this->send<T>(address.ip(), address.port(), &data, 1);
+        return this->send<T>(address.get_ip(), address.get_port(), &data, 1);
     }
 
     template <>
@@ -71,7 +71,7 @@ namespace Socket
     template <>
     int UDP::send<std::string>(const Address& address, std::string data)
     {
-        return this->send<char>(address.ip(), address.port(), data.c_str(), data.length() + 1);
+        return this->send<char>(address.get_ip(), address.get_port(), data.c_str(), data.length() + 1);
     }
 
     template <class T>

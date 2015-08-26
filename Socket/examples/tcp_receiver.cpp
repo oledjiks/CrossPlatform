@@ -21,7 +21,7 @@ void receiving_all_msg(Socket::TCP& server)
         {
             buffer[len] = '\0';
             cout << "--> [TCP] client (" << client.get_socket_id()
-                 << ")"<< client.ip() << ":" << client.port()
+                 << ")"<< client.get_ip() << ":" << client.get_port()
                  << " <" << len << "> " << buffer << endl;
         }
     }

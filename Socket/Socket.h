@@ -78,11 +78,11 @@ namespace Socket
         Address(struct sockaddr_in);
         Address(const Address&);
 
-        Ip ip(void) const;
-        Ip ip(Ip);
+        Ip get_ip(void) const;
+        Ip set_ip(Ip);
 
-        Port port(void) const;
-        Port port(Port);
+        Port get_port(void) const;
+        Port set_port(Port);
 
         friend std::ostream& operator<< (std::ostream&, Address&);
     };
@@ -172,9 +172,9 @@ namespace Socket
         ~TCP(void);
         void close(void);
 
-        Ip ip(void);
-        Port port(void);
-        Address address(void);
+        Ip get_ip(void);
+        Port get_port(void);
+        Address get_address(void);
 
         void listen_on_port(Port, unsigned int listeners = 1);
         void connect_to(Address);

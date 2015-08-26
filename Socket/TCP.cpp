@@ -109,17 +109,17 @@ namespace Socket
         this->_binded = false;
     }
 
-    Ip TCP::ip(void)
+    Ip TCP::get_ip(void)
     {
-        return this->_address.ip();
+        return this->_address.get_ip();
     }
 
-    Port TCP::port(void)
+    Port TCP::get_port(void)
     {
-        return this->_address.port();
+        return this->_address.get_port();
     }
 
-    Address TCP::address(void)
+    Address TCP::get_address(void)
     {
         return Address(this->_address);
     }
@@ -128,7 +128,7 @@ namespace Socket
     {
         if (this->_binded)
         {
-            if (this->_address.port() != port)
+            if (this->_address.get_port() != port)
                 throw SocketException("[listen_on_port] Socket listen to a port different from binded");
         }
         else
