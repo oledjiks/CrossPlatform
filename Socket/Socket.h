@@ -33,7 +33,8 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
-#include <cstring>
+#include <string.h>
+#include <fcntl.h>
 #endif
 
 #ifndef WINDOWS
@@ -41,7 +42,7 @@
 #endif
 
 #ifndef SOCKET_MAX_BUFFER_BYTES
-#define SOCKET_MAX_BUFFER_BYTES   4096
+#define SOCKET_MAX_BUFFER_BYTES   (2 << 20)
 #endif
 
 namespace Socket
@@ -128,7 +129,19 @@ namespace Socket
         void close(void);
 
         virtual void bind_on_port(Port);
-        int set_option(int, int, const char *, socklen_t);
+        int set_option(int, int, const void*, socklen_t);
+        int get_option(int, int, void*, socklen_t*);
+
+        int set_broadcast(bool isboardcast);
+        int set_nonblock(bool isnonblock);
+        int set_ttl(int ttl);
+        int get_ttl(int& ttl);
+        int set_multicast_ttl(int ttl);
+        int set_tos(int tos);
+        int get_tos(int& tos);
+        int set_timeout(int sendtimeout, int recvtimeout);
+        int set_buffsize(int sendbuffsize, int recvbuffsize);
+        int get_buffsize(int& sendbuffsize, int& recvbuffsize);
     };
 
     class UDP : public CommonSocket
@@ -170,6 +183,12 @@ namespace Socket
         TCP(void);
         TCP(const TCP&);
         ~TCP(void);
+
+        int set_reuseaddr(bool isreuseaddr);
+        int set_lingeroff();
+        int set_lingeron(short timeoutsec);
+        int set_nodelay(bool isnodelay);
+
         void close(void);
 
         Ip get_ip(void);

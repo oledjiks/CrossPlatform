@@ -95,17 +95,196 @@ namespace Socket
         this->_binded = true;
     }
 
-    int CommonSocket::set_option(int level, int optname, const char *optval, socklen_t optlen)
+    int CommonSocket::set_option(int level, int optname, const void* optval, socklen_t optlen)
     {
-        int ret;
+        int ret = 0;
 
-        if ((ret = ::setsockopt(this->_socket_id, level, optname, (const char *)optval, optlen)) == SOCKET_ERROR)
+        if ((ret = ::setsockopt(_socket_id, level, optname, (const char*)optval, optlen)) == SOCKET_ERROR)
         {
             std::stringstream error;
             error << "[set_option] error";
             throw SocketException(error.str());
         }
 
+        return ret;
+    }
+
+    int CommonSocket::get_option(int level, int optname, void* optval, socklen_t* optlen)
+    {
+        int ret = 0;
+        if ((ret = getsockopt(_socket_id, level, optname, (char*)optval, optlen)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[get_option] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_broadcast(bool isbroadcast)
+    {
+        int ret = 0;
+        if ((ret = ::setsockopt(_socket_id, SOL_SOCKET, SO_BROADCAST, (const char*)&isbroadcast, sizeof(bool))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_broadcast] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_nonblock(bool isnonblock)
+    {
+        int ret = 0;
+#ifdef WINDOWS
+        unsigned long arg;
+        arg = (isnonblock) ? 1 : 0;
+        if ((ret = ioctlsocket(_socket_id, FIONBIO, (unsigned long*)&arg)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_nonblock] error";
+            throw SocketException(error.str());
+        }
+#else
+        int flags = fcntl(_socket_id, F_GETFL, 0);
+        long arg = (isnonblock) ? (flags | O_NONBLOCK) : (flags & ~O_NONBLOCK);
+        if ((ret = fcntl(_socket_id, F_SETFL, arg)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_nonblock] error";
+            throw SocketException(error.str());
+        }
+#endif
+        return ret;
+    }
+
+    int CommonSocket::set_ttl(int ttl)
+    {
+        int ret = 0;
+        if ((ret = setsockopt(_socket_id, IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(int))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_ttl] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::get_ttl(int& ttl)
+    {
+        int ret = 0;
+        socklen_t len;
+        if ((ret = getsockopt(_socket_id, IPPROTO_IP, IP_TTL, (char*)&ttl, &len)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[get_ttl] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_multicast_ttl(int ttl)
+    {
+        int ret = 0;
+        if ((ret = setsockopt(_socket_id, IPPROTO_IP, IP_MULTICAST_TTL, (char*)&ttl, sizeof(int))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_multicast_ttl] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_tos(int tos)
+    {
+        int ret = 0;
+        if ((ret = setsockopt(_socket_id, IPPROTO_IP, IP_TOS, (char*)&tos, sizeof(int))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_tos] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::get_tos(int& tos)
+    {
+        int ret = 0;
+        socklen_t len;
+        if ((ret = getsockopt(_socket_id, IPPROTO_IP, IP_TOS, (char*)&tos, &len)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[get_tos] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_timeout(int sendtimeout, int recvtimeout)
+    {
+        int ret = 0;
+        if (sendtimeout >= 0)
+        {
+            if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_SNDTIMEO, (char*)&sendtimeout, sizeof(int))) == SOCKET_ERROR)
+            {
+                std::stringstream error;
+                error << "[set_timeout] error";
+                throw SocketException(error.str());
+            }
+        }
+        if (recvtimeout >= 0)
+        {
+            if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_SNDTIMEO, (char*)&recvtimeout, sizeof(int))) == SOCKET_ERROR)
+            {
+                std::stringstream error;
+                error << "[set_timeout] error";
+                throw SocketException(error.str());
+            }
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_buffsize(int sendbuffsize, int recvbuffsize)
+    {
+        int ret = 0;
+        if (sendbuffsize > 0)
+        {
+            if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_SNDBUF, (char*)&sendbuffsize, sizeof(int))) == SOCKET_ERROR)
+            {
+                std::stringstream error;
+                error << "[set_buffsize] error";
+                throw SocketException(error.str());
+            }
+        }
+        if (recvbuffsize > 0)
+        {
+            if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_RCVBUF, (char*)&recvbuffsize, sizeof(int))) == SOCKET_ERROR)
+            {
+                std::stringstream error;
+                error << "[set_buffsize] error";
+                throw SocketException(error.str());
+            }
+        }
+
+        return ret;
+    }
+
+    int CommonSocket::get_buffsize(int& sendbuffsize, int& recvbuffsize)
+    {
+        int ret = 0;
+        socklen_t len;
+        if ((ret = getsockopt(_socket_id, SOL_SOCKET, SO_SNDBUF, (char*)&sendbuffsize, &len)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_buffsize] error";
+            throw SocketException(error.str());
+        }
+        if ((ret = getsockopt(_socket_id, SOL_SOCKET, SO_RCVBUF, (char*)&recvbuffsize, &len)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_buffsize] error";
+            throw SocketException(error.str());
+        }
         return ret;
     }
 }

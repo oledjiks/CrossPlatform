@@ -83,6 +83,60 @@ namespace Socket
 #endif
     }
 
+    int TCP::set_lingeroff()
+    {
+        int ret = 0;
+        linger socklinger;
+        socklinger.l_onoff  = 0;
+        socklinger.l_linger = 0;
+        if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_LINGER, (char*)&socklinger,sizeof(linger))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_lingeroff] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int TCP::set_lingeron(short timeoutsec)
+    {
+        int ret = 0;
+        linger socklinger;
+        socklinger.l_onoff  = 1;
+        socklinger.l_linger = timeoutsec;
+        if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_LINGER, (char*)&socklinger,sizeof(linger))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_lingeron] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int TCP::set_reuseaddr(bool isreuseaddr)
+    {
+        int ret = 0;
+        if ((ret = setsockopt(_socket_id, SOL_SOCKET, SO_REUSEADDR, (char*)&isreuseaddr, sizeof(bool))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_reuseaddr] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int TCP::set_nodelay(bool isnodelay)
+    {
+        int ret = 0;
+        if ((ret = setsockopt(_socket_id, IPPROTO_TCP, TCP_NODELAY, (const char*)&isnodelay, sizeof(bool))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_nodelay] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
     void TCP::close(void)
     {
         if (this->_opened)
