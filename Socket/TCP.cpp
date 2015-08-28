@@ -166,7 +166,6 @@ namespace Socket
         TCP ret;
         socklen_t len = sizeof(struct sockaddr_in);
 
-        ret.close();
         ret._socket_id = accept(this->_socket_id, (struct sockaddr*)&ret._address, (socklen_t *)&len);
         ret._opened = true;
         ret._binded = true;
@@ -190,7 +189,7 @@ namespace Socket
         }
 
         int ret;
-        if ((ret = ::send(this->_socket_id, (const char*)buffer, len, 0)) == -1)
+        if ((ret = ::send(this->_socket_id, (const char*)buffer, len, 0)) == SOCKET_ERROR)
             throw SocketException("[send] Cannot send");
         return ret;
     }
@@ -211,7 +210,7 @@ namespace Socket
         }
 
         int ret;
-        if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == -1)
+        if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == SOCKET_ERROR)
             throw SocketException("[receive] Cannot receive");
         return ret;
     }
@@ -231,7 +230,7 @@ namespace Socket
             throw SocketException(error.str());
         }
 
-        int ret = -1;
+        int ret = SOCKET_ERROR;
         int ready;
         fd_set wset;
         struct timeval timeout = {(time_t)(ms/1000), ms%1000};
@@ -240,17 +239,21 @@ namespace Socket
         FD_SET(this->_socket_id, &wset);
 
         ready = ::select(this->_socket_id+1, NULL, &wset, NULL, &timeout);
-        if (ready == SOCKET_ERROR)
+        // error
+        if (ready == SOCKET_ERROR || ready < 0)
         {
-            throw SocketException("[send_timeout] select() return SOCKET_ERROR");
+            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
         }
-        else if (ready > 0)
+
+        // timeout
+        if (ready == 0)
+            return 0;
+
+        // something to read
+        if (FD_ISSET(this->_socket_id, &wset))
         {
-            if (FD_ISSET(this->_socket_id, &wset))
-            {
-                if ((ret = ::send(buffer, len)) == -1)
-                    throw SocketException("[send_timeout] Cannot send");
-            }
+            if ((ret = ::send(this->_socket_id, (const char*)buffer, len, 0)) == SOCKET_ERROR)
+                throw SocketException("[send_timeout] Cannot send");
         }
 
         return ret;
@@ -266,12 +269,12 @@ namespace Socket
         if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
-            error << "[send] [len=" << len << "] Data length higher then max buffer len ("
+            error << "[receive_timeout] [len=" << len << "] Data length higher then max buffer len ("
                   << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
-        int ret = -1;
+        int ret = SOCKET_ERROR;
         int ready;
         fd_set rset;
         struct timeval timeout = {(time_t)(ms/1000), ms%1000};
@@ -280,17 +283,21 @@ namespace Socket
         FD_SET(this->_socket_id, &rset);
 
         ready = ::select(this->_socket_id+1, &rset, NULL, NULL, &timeout);
-        if (ready == SOCKET_ERROR)
+        // error
+        if (ready == SOCKET_ERROR || ready < 0)
         {
             throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
         }
-        else if (ready > 0)
+
+        // timeout
+        if (ready == 0)
+            return 0;
+
+        // something to read
+        if (FD_ISSET(this->_socket_id, &rset))
         {
-            if (FD_ISSET(this->_socket_id, &rset))
-            {
-                if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == -1)
-                    throw SocketException("[receive_timeout] Cannot receive");
-            }
+            if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == SOCKET_ERROR)
+                throw SocketException("[receive_timeout] Cannot receive");
         }
 
         return ret;
@@ -372,7 +379,6 @@ namespace Socket
         if (this->_clients.size() >= FD_SETSIZE)
             return SOCKET_ERROR;
 
-        client.close();
         client._socket_id = accept(this->_socket_id, (struct sockaddr*)&client._address, (socklen_t *)&len);
 
         {
@@ -383,7 +389,7 @@ namespace Socket
 #ifdef _DEBUG
         std::stringstream ss;
         ss << "in accept_client() clients number is: " << this->_clients.size()
-           << "\t accepted client: " << client._address.ip() << ":" << client._address.port() << std::endl;
+           << "\t accepted client: " << client._address.get_ip() << ":" << client._address.get_port() << std::endl;
         std::cout << ss.str();
 #endif
         return client._socket_id;
@@ -421,8 +427,8 @@ namespace Socket
 
         ready = ::select(maxfd+1, &client_rset, NULL, NULL, &tv);
 
-        // select() error
-        if (ready == SOCKET_ERROR)
+        // error
+        if (ready == SOCKET_ERROR || ready < 0)
             return SOCKET_ERROR;
 
         // timeout

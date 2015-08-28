@@ -20,8 +20,15 @@ int main(void)
 
             client.connect_to(Socket::Address(IP, PORT));
 
-            cout << "sending ..." << endl;
-            client.send_file("input.bmp");
+            // cout << "sending ..." << endl;
+            // client.send_file("input.bmp");
+
+            string str_buffer;
+            cout << "input message to send: ";
+            cin >> str_buffer;
+            client.send_timeout<char>(1000, str_buffer.c_str(), str_buffer.length());
+            // client.send<char>(str_buffer.c_str(), str_buffer.length());
+
             client.close();
             cout << "Client1 close\n";
         }
@@ -29,6 +36,7 @@ int main(void)
         cout << endl
              << "-------- Multi I/O prototype --------" << endl
              << "Any key to continue ...";
+        getchar();
         getchar();
         {
             // Multi I/O prototype

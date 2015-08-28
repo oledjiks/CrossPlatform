@@ -51,8 +51,27 @@ int main(void)
             server.listen_on_port(PORT);
             Socket::TCP client = server.accept_client();
 
-            cout << "receiving ..." << endl;
-            client.receive_file("output.bmp");
+            // cout << "receiving ..." << endl;
+            // client.receive_file("output.bmp");
+
+            char buff[100];
+            int len;
+            do
+            {
+                len = client.receive_timeout<char>(1000, buff, 100);
+                if (len > 0)
+                {
+                    buff[len] = '\0';
+                    cout << "received(" << len << "): " << buff << endl;
+					break;
+                }
+                else
+                {
+                    cout << "receiveing timeout" << endl;
+                }
+            }
+            while (1);
+
             server.close();
             cout << "Server1 close\n";
         }
