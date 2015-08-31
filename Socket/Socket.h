@@ -37,12 +37,14 @@
 #include <fcntl.h>
 #endif
 
+#define SOCKET_TIMEOUT            (0)
 #ifndef WINDOWS
 #define SOCKET_ERROR              (-1)
 #endif
+#define SOCKET_CLOSE              (-2)
 
 #ifndef SOCKET_MAX_BUFFER_BYTES
-#define SOCKET_MAX_BUFFER_BYTES   (2 << 20)
+#define SOCKET_MAX_BUFFER_BYTES   (64 << 10) // 64KB
 #endif
 
 namespace Socket
@@ -210,7 +212,7 @@ namespace Socket
         void receive_file(std::string);
 
         int accept_all(TCP&) throw();
-        template <class T> int select_receive_all(TCP&, T*, size_t) throw();
+        template <class T> int select_receive_all(TCP&, unsigned int, T*, size_t) throw();
     };
 }
 

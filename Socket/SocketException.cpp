@@ -11,13 +11,14 @@ namespace Socket
         error << message;
 #ifdef WINDOWS
         unsigned long dw = GetLastError();
-        LPVOID lpmsg;
         char sz[128];
+        sz[0] = '\0';
+        LPVOID lpmsg;
         size_t len = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                     NULL, dw, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                                     // MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                                     (LPSTR)&lpmsg, 0, NULL);
-        sprintf_s(sz, "%s", lpmsg);
+        sprintf_s(sz, len+1, "%s", lpmsg);
         if (len > 2)
             sz[len - 2] = '\0';
         else

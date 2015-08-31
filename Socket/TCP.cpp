@@ -201,8 +201,6 @@ namespace Socket
 
     void TCP::connect_to(Address address)
     {
-        if (this->_binded) throw SocketException("[connect_to] Socket already binded to a port, use another socket");
-
         if (!this->_opened) this->open();
 
         if (connect(this->_socket_id, (struct sockaddr*)&address, sizeof(struct sockaddr_in)) < 0)
@@ -251,8 +249,8 @@ namespace Socket
     template <class T>
     int TCP::receive(T* buffer, size_t len)
     {
-        if (!this->_binded) throw SocketException("[send_file] Socket not binded");
-        if (!this->_opened) throw SocketException("[send_file] Socket not opened");
+        if (!this->_binded) throw SocketException("[receive] Socket not binded");
+        if (!this->_opened) throw SocketException("[receive] Socket not opened");
 
         len *= sizeof(T);
         if (len > SOCKET_MAX_BUFFER_BYTES)
@@ -264,22 +262,32 @@ namespace Socket
         }
 
         int ret;
-        if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == SOCKET_ERROR)
-            throw SocketException("[receive] Cannot receive");
+        ret = ::recv(this->_socket_id, (char *)buffer, len, 0);
+        if (ret == 0 || (ret == SOCKET_ERROR
+#ifdef WINDOWS
+                         && WSAGetLastError() == WSAECONNRESET
+#else
+                         && errno == ECONNRESET
+#endif
+                ))
+        {
+            ret = SOCKET_CLOSE;
+        }
+
         return ret;
     }
 
     template <class T>
     int TCP::send_timeout(unsigned int ms, const T* buffer, size_t len)
     {
-        if (!this->_binded) throw SocketException("[send] Socket not binded");
-        if (!this->_opened) throw SocketException("[send] Socket not opened");
+        if (!this->_binded) throw SocketException("[send_timeout] Socket not binded");
+        if (!this->_opened) throw SocketException("[send_timeout] Socket not opened");
 
         len *= sizeof(T);
         if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
-            error << "[send] [len=" << len << "] Data length higher then max buffer len ("
+            error << "[send_timeout] [len=" << len << "] Data length higher then max buffer len ("
                   << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
@@ -296,14 +304,14 @@ namespace Socket
         // error
         if (ready == SOCKET_ERROR || ready < 0)
         {
-            throw SocketException("[receive_timeout] select() return SOCKET_ERROR");
+            throw SocketException("[send_timeout] select() return SOCKET_ERROR");
         }
 
         // timeout
         if (ready == 0)
             return 0;
 
-        // something to read
+        // something to write
         if (FD_ISSET(this->_socket_id, &wset))
         {
             if ((ret = ::send(this->_socket_id, (const char*)buffer, len, 0)) == SOCKET_ERROR)
@@ -316,8 +324,8 @@ namespace Socket
     template <class T>
     int TCP::receive_timeout(unsigned int ms, T* buffer, size_t len)
     {
-        if (!this->_binded) throw SocketException("[send] Socket not binded");
-        if (!this->_opened) throw SocketException("[send] Socket not opened");
+        if (!this->_binded) throw SocketException("[receive_timeout] Socket not binded");
+        if (!this->_opened) throw SocketException("[receive_timeout] Socket not opened");
 
         len *= sizeof(T);
         if (len > SOCKET_MAX_BUFFER_BYTES)
@@ -345,13 +353,22 @@ namespace Socket
 
         // timeout
         if (ready == 0)
-            return 0;
+            return SOCKET_TIMEOUT;
 
         // something to read
         if (FD_ISSET(this->_socket_id, &rset))
         {
-            if ((ret = ::recv(this->_socket_id, (char *)buffer, len, 0)) == SOCKET_ERROR)
-                throw SocketException("[receive_timeout] Cannot receive");
+            ret = ::recv(this->_socket_id, (char *)buffer, len, 0);
+            if (ret == 0 || (ret == SOCKET_ERROR
+#ifdef WINDOWS
+                             && WSAGetLastError() == WSAECONNRESET
+#else
+                             && errno == ECONNRESET
+#endif
+                    ))
+            {
+                ret = SOCKET_CLOSE;
+            }
         }
 
         return ret;
@@ -450,13 +467,13 @@ namespace Socket
     }
 
     template <class T>
-    int TCP::select_receive_all(TCP& client, T* buffer, size_t len) throw()
+    int TCP::select_receive_all(TCP& client, unsigned int ms, T* buffer, size_t len) throw()
     {
         int ready;
         int ret;
         SocketId maxfd = 0;
         fd_set client_rset;
-        struct timeval tv = {0, 10000};
+        struct timeval tv = {(time_t)(ms/1000), ms%1000};
 
 #ifdef _DEBUG
         std::stringstream ss;
@@ -467,7 +484,7 @@ namespace Socket
         if (!this->_opened)
             return SOCKET_ERROR;
 
-        size_t clients_num; // for thread safe (clients_num should be less then this->_clients_num)
+        size_t clients_num; // for thread safe
         {
             ScopeLock lock(this->_clients_mutex);
             clients_num = this->_clients.size();
@@ -487,7 +504,7 @@ namespace Socket
 
         // timeout
         if (ready == 0)
-            return 0;
+            return SOCKET_TIMEOUT;
 
         // something to read
 #ifdef _DEBUG
