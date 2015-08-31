@@ -10,12 +10,13 @@ struct prova
 
 int main(void)
 {
+    char* buffer = new char[SOCKET_MAX_BUFFER_BYTES];
+
     try
     {
         Socket::UDP sock;
         sock.open();
 
-        double buffer[SOCKET_MAX_BUFFER_BYTES / sizeof(double)];
         unsigned int i;
         int buffer_size = SOCKET_MAX_BUFFER_BYTES / sizeof(double);
 
@@ -50,10 +51,14 @@ int main(void)
 
 
         // (buffer [, SOCKET_MAX_BUFFER_BYTES]);
-        Socket::Datagram<double*>           rec_pnt = sock.receive<double>(buffer);
+        Socket::Datagram<double*>           rec_pnt = sock.receive<double>((double*)buffer);
         for (i = 0; i < rec_pnt.received_elements; i++)
             cout << rec_pnt.data[i] << " ";
         cout << endl;
+
+
+        Socket::Datagram<prova*>            rec_stct = sock.receive<prova>((prova*)buffer);
+        cout << "struct prova: {" << rec_stct.data->something << ", " << rec_stct.data->somethingelse << "}" << endl;
 
 
         sock.close();
@@ -61,6 +66,12 @@ int main(void)
     catch (Socket::SocketException &e)
     {
         cout << e << endl;
+    }
+
+    if (buffer)
+    {
+        delete[] buffer;
+        buffer = nullptr;
     }
 
     return 0;

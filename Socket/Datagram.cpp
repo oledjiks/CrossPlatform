@@ -17,6 +17,16 @@ namespace Socket
         this->address = datagram.address;
         this->data = datagram.data;
     }
+
+#if __cplusplus >= 201103L
+    template <class DataType>
+    template <class T>
+    void Datagram<DataType>::operator= (Datagram<T>&& datagram)
+    {
+        this->address = datagram.address;
+        this->data = std::move(datagram.data);
+    }
+#endif
 }
 
 #endif

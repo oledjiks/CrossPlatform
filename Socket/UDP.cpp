@@ -25,8 +25,8 @@ namespace Socket
         if (len > SOCKET_MAX_BUFFER_BYTES)
         {
             std::stringstream error;
-            error << "[send] with [ip=" << ip << "] [port=" << port << "] [data=" << data
-                  << "] [len=" << len << "] Data length higher then max buffer len";
+            error << "[send] with [ip=" << ip << "] [port=" << port << "] [len=" << len
+                  << "] Data length higher then max buffer len (" << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
@@ -85,7 +85,7 @@ namespace Socket
         {
             std::stringstream error;
             error << "[receive] with [buffer=" << data << "] [len=" << len
-                  << "] Data length higher then max buffer length";
+                  << "] Data length higher then max buffer length (" << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 
@@ -152,7 +152,7 @@ namespace Socket
         {
             std::stringstream error;
             error << "[receive_timeout] with [buffer=" << data << "] [len=" << len
-                  << "] Data length higher then max buffer length";
+                  << "] Data length higher then max buffer length (" << SOCKET_MAX_BUFFER_BYTES << ")";
             throw SocketException(error.str());
         }
 

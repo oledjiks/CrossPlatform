@@ -23,10 +23,15 @@ int main(void)
         int iarr[5] = { 0, 1, 2, 3, 4 };
         sock.send<int>(to, iarr, 5);
 
-        sock.send<float>(to, 5.0);
+        sock.send<float>(to, 5.432f);
 
-        double darr[5] = { 0.0, 1.0, 2.0, 3.0, 4.0 };
+        double darr[5] = { 0.1, 1.2, 2.3, 3.4, 4.5 };
         sock.send<double>(to, darr, 5);
+
+        prova stct;
+        stct.something = 1;
+        stct.somethingelse = 1.1f;
+        sock.send<prova>(to, stct);
 
         sock.close();
     }

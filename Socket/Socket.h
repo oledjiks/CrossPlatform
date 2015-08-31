@@ -101,8 +101,10 @@ namespace Socket
 
         Datagram();
 
-        template <class T>
-        void operator= (const Datagram<T>&);
+        template <class T> void operator= (const Datagram<T>&);
+#if __cplusplus >= 201103L
+        template <class T> void operator= (Datagram<T>&&);
+#endif
     };
 
     class CommonSocket
