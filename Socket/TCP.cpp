@@ -1,16 +1,17 @@
 #ifndef _TCP_CPP_
 #define _TCP_CPP_
 
+#include "Socket.h"
+
 #ifdef WINDOWS
 #include <windows.h>
 #else
 #include <pthread.h>
 #endif
-#include "Socket.h"
 
 namespace Socket
 {
-    class ScopeLock
+    class TCP::LockGuard
     {
     private:
 #ifdef WINDOWS
@@ -21,13 +22,13 @@ namespace Socket
 
     public:
 #ifdef WINDOWS
-        ScopeLock(HANDLE& m) : _mutex(m)
+        LockGuard(HANDLE& m) : _mutex(m)
         {
             if (WaitForSingleObject(this->_mutex, INFINITE) != WAIT_OBJECT_0)
                 throw std::exception();
         }
 #else
-        ScopeLock(pthread_mutex_t& m) : _mutex(m)
+        LockGuard(pthread_mutex_t& m) : _mutex(m)
         {
             if (pthread_mutex_lock(&this->_mutex))
                 throw std::exception();
@@ -35,13 +36,13 @@ namespace Socket
 #endif
 
 #ifdef WINDOWS
-        virtual ~ScopeLock()
+        virtual ~LockGuard()
         {
             if (!ReleaseMutex(this->_mutex))
                 throw std::exception();
         }
 #else
-        virtual ~ScopeLock()
+        virtual ~LockGuard()
         {
             if (pthread_mutex_unlock(&this->_mutex))
                 throw std::exception();
@@ -453,7 +454,7 @@ namespace Socket
         client._socket_id = accept(this->_socket_id, (struct sockaddr*)&client._address, (socklen_t *)&len);
 
         {
-            ScopeLock lock(this->_clients_mutex);
+            LockGuard lock(this->_clients_mutex);
             this->_clients.push_back(std::make_pair(client._socket_id, client._address));
         }
 
@@ -467,7 +468,7 @@ namespace Socket
     }
 
     template <class T>
-    int TCP::select_receive_all(TCP& client, unsigned int ms, T* buffer, size_t len) throw()
+    int TCP::receive_all(TCP& client, unsigned int ms, T* buffer, size_t len) throw()
     {
         int ready;
         int ret;
@@ -486,7 +487,7 @@ namespace Socket
 
         size_t clients_num; // for thread safe
         {
-            ScopeLock lock(this->_clients_mutex);
+            LockGuard lock(this->_clients_mutex);
             clients_num = this->_clients.size();
             FD_ZERO(&client_rset);
             for (unsigned int i = 0; i < clients_num; ++i)
@@ -544,7 +545,7 @@ namespace Socket
                     std::cout << ss.str();
 #endif
                     {
-                        ScopeLock lock(this->_clients_mutex);
+                        LockGuard lock(this->_clients_mutex);
                         this->_clients.erase(this->_clients.begin() + i);
                     }
 #ifdef _DEBUG

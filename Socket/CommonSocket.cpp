@@ -45,7 +45,7 @@ namespace Socket
 #endif
     }
 
-    SocketId CommonSocket::get_socket_id(void)
+    inline SocketId CommonSocket::get_socket_id(void)
     {
         return this->_socket_id;
     }

@@ -15,7 +15,7 @@ void receiving_all_msg(Socket::TCP& server, char* buffer)
 
     while (1)
     {
-        len = server.select_receive_all<char>(client, 1000, buffer, SOCKET_MAX_BUFFER_BYTES-1);
+        len = server.receive_all<char>(client, 1000, buffer, SOCKET_MAX_BUFFER_BYTES-1);
         if (len > 0)
         {
             buffer[len] = '\0';

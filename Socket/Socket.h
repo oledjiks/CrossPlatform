@@ -9,15 +9,10 @@
  *
  * @warning
  */
+
+
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
-
-#include <iostream>
-#include <sstream>
-#include <exception>
-#include <string>
-#include <vector>
-#include <fstream>
 
 #if defined __WIN32 || defined __WIN64 || defined WIN32 || defined WIN64
 #define WINDOWS
@@ -36,6 +31,13 @@
 #include <string.h>
 #include <fcntl.h>
 #endif
+
+#include <iostream>
+#include <sstream>
+#include <exception>
+#include <string>
+#include <vector>
+#include <fstream>
 
 #define SOCKET_TIMEOUT            (0)
 #ifndef WINDOWS
@@ -81,11 +83,11 @@ namespace Socket
         Address(struct sockaddr_in);
         Address(const Address&);
 
-        Ip get_ip(void) const;
-        Ip set_ip(Ip);
+        inline Ip get_ip(void) const;
+        inline Ip set_ip(Ip);
 
-        Port get_port(void) const;
-        Port set_port(Port);
+        inline Port get_port(void) const;
+        inline Port set_port(Port);
 
         friend std::ostream& operator<< (std::ostream&, Address&);
     };
@@ -127,7 +129,7 @@ namespace Socket
 
         ~CommonSocket(void);
 
-        SocketId get_socket_id(void);
+        inline SocketId get_socket_id(void);
 
         void open(void);
         void close(void);
@@ -183,6 +185,7 @@ namespace Socket
 #else
         pthread_mutex_t                       _clients_mutex;
 #endif
+        class LockGuard;        // Nested Classes
     public:
         TCP(void);
         TCP(const TCP&);
@@ -214,7 +217,7 @@ namespace Socket
         void receive_file(std::string);
 
         int accept_all(TCP&) throw();
-        template <class T> int select_receive_all(TCP&, unsigned int, T*, size_t) throw();
+        template <class T> int receive_all(TCP&, unsigned int, T*, size_t) throw();
     };
 }
 

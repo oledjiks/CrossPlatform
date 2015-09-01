@@ -39,12 +39,12 @@ namespace Socket
         this->sin_port = address.sin_port;
     }
 
-    Ip Address::get_ip(void) const
+    inline Ip Address::get_ip(void) const
     {
         return inet_ntoa(this->sin_addr);
     }
 
-    Ip Address::set_ip(Ip ip)
+    inline Ip Address::set_ip(Ip ip)
     {
 #ifdef WINDOWS
         unsigned long address = inet_addr(ip.c_str());
@@ -70,12 +70,12 @@ namespace Socket
         return this->get_ip();
     }
 
-    Port Address::get_port(void) const
+    inline Port Address::get_port(void) const
     {
         return ntohs(this->sin_port);
     }
 
-    Port Address::set_port(Port port)
+    inline Port Address::set_port(Port port)
     {
         this->sin_port = htons(port);
         return this->get_port();
