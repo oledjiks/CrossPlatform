@@ -213,9 +213,6 @@ namespace Socket
         template <class T> int send_timeout(unsigned int, const T*, size_t);
         template <class T> int receive_timeout(unsigned int, T*, size_t);
 
-        void send_file(std::string);
-        void receive_file(std::string);
-
         int accept_all(TCP&) throw();
         template <class T> int receive_all(TCP&, unsigned int, T*, size_t) throw();
     };

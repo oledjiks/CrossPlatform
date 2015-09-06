@@ -19,9 +19,6 @@ int main(void)
         client.bind_on_port(PORT+2);
         client.connect_to(Socket::Address(IP, PORT));
 
-        // cout << "sending ..." << endl;
-        // client.send_file("input.bmp");
-
         string str_buffer;
         cout << "input message to send: ";
         cin >> str_buffer;

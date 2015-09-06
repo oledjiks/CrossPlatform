@@ -51,9 +51,6 @@ int main(void)
         server.listen_on_port(PORT);
         Socket::TCP client = server.accept_client();
 
-        // cout << "receiving ..." << endl;
-        // client.receive_file("output.bmp");
-
         int len;
         do
         {
