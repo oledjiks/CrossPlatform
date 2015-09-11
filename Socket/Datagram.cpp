@@ -5,13 +5,13 @@
 
 namespace Socket
 {
-    template <class DataType>
+    template <typename DataType>
     Datagram<DataType>::Datagram() : received_bytes(0), received_elements(0)
     {
     }
 
-    template <class DataType>
-    template <class T>
+    template <typename DataType>
+    template <typename T>
     void Datagram<DataType>::operator= (const Datagram<T> &datagram)
     {
         this->address = datagram.address;
@@ -19,8 +19,8 @@ namespace Socket
     }
 
 #if __cplusplus >= 201103L
-    template <class DataType>
-    template <class T>
+    template <typename DataType>
+    template <typename T>
     void Datagram<DataType>::operator= (Datagram<T>&& datagram)
     {
         this->address = datagram.address;

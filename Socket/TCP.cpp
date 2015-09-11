@@ -226,7 +226,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     int TCP::send(const T* buffer, size_t len)
     {
         if (!this->_binded) throw SocketException("[send] Socket not binded");
@@ -247,7 +247,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     int TCP::receive(T* buffer, size_t len)
     {
         if (!this->_binded) throw SocketException("[receive] Socket not binded");
@@ -278,7 +278,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     int TCP::send_timeout(unsigned int ms, const T* buffer, size_t len)
     {
         if (!this->_binded) throw SocketException("[send_timeout] Socket not binded");
@@ -322,7 +322,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     int TCP::receive_timeout(unsigned int ms, T* buffer, size_t len)
     {
         if (!this->_binded) throw SocketException("[receive_timeout] Socket not binded");
@@ -398,7 +398,7 @@ namespace Socket
         return client._socket_id;
     }
 
-    template <class T>
+    template <typename T>
     int TCP::receive_all(TCP& client, unsigned int ms, T* buffer, size_t len) throw()
     {
         int ready;

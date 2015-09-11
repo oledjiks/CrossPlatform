@@ -16,7 +16,7 @@ namespace Socket
         this->_binded = udp._binded;
     }
 
-    template <class T>
+    template <typename T>
     int UDP::send(Ip ip, Port port, const T *data, size_t len)
     {
         if (!this->_opened) this->open();
@@ -44,19 +44,19 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     int UDP::send(const Address& address, const T *data, size_t len)
     {
         return this->send<T>(address.get_ip(), address.get_port(), data, len);
     }
 
-    template <class T>
+    template <typename T>
     int UDP::send(Ip ip, Port port, T data)
     {
         return this->send<T>(ip, port, &data, 1);
     }
 
-    template <class T>
+    template <typename T>
     int UDP::send(const Address& address, T data)
     {
         return this->send<T>(address.get_ip(), address.get_port(), &data, 1);
@@ -74,7 +74,7 @@ namespace Socket
         return this->send<char>(address.get_ip(), address.get_port(), data.c_str(), data.length() + 1);
     }
 
-    template <class T>
+    template <typename T>
     inline int UDP::receive(Address& address, T *data, size_t len, unsigned int& received_elements)
     {
         if (!this->_opened) this->open();
@@ -102,7 +102,7 @@ namespace Socket
         return received_bytes;
     }
 
-    template <class T>
+    template <typename T>
     Datagram<T*> UDP::receive(T *buffer, size_t len)
     {
         Datagram<T*> ret;
@@ -113,7 +113,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T, size_t N>
+    template <typename T, size_t N>
     Datagram<T[N]> UDP::receive(size_t len)
     {
         Datagram<T[N]> ret;
@@ -121,7 +121,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     Datagram<T> UDP::receive(void)
     {
         Datagram<T> ret;
@@ -141,7 +141,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     inline int UDP::receive_timeout(unsigned int ms, Address& address, T* data, size_t len, unsigned int& received_elements)
     {
         if (!this->_opened) this->open();
@@ -187,7 +187,7 @@ namespace Socket
         return received_bytes;
     }
 
-    template <class T>
+    template <typename T>
     Datagram<T*> UDP::receive_timeout(unsigned int ms, T *buffer, size_t len)
     {
         Datagram<T*> ret;
@@ -198,7 +198,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T, size_t N>
+    template <typename T, size_t N>
     Datagram<T[N]> UDP::receive_timeout(unsigned int ms, size_t len)
     {
         Datagram<T[N]> ret;
@@ -208,7 +208,7 @@ namespace Socket
         return ret;
     }
 
-    template <class T>
+    template <typename T>
     Datagram<T> UDP::receive_timeout(unsigned int ms)
     {
         Datagram<T> ret;

@@ -92,7 +92,7 @@ namespace Socket
         friend std::ostream& operator<< (std::ostream&, Address&);
     };
 
-    template <class DataType>
+    template <typename DataType>
     struct Datagram
     {
     public:
@@ -103,9 +103,9 @@ namespace Socket
 
         Datagram();
 
-        template <class T> void operator= (const Datagram<T>&);
+        template <typename T> void operator= (const Datagram<T>&);
 #if __cplusplus >= 201103L
-        template <class T> void operator= (Datagram<T>&&);
+        template <typename T> void operator= (Datagram<T>&&);
 #endif
     };
 
@@ -156,23 +156,23 @@ namespace Socket
         UDP(void);
         UDP(const UDP&);
 
-        template <class T> int send(Ip, Port, const T*, size_t);
-        template <class T> int send(const Address&, const T*, size_t);
-        template <class T> int send(Ip, Port, T);
-        template <class T> int send(const Address&, T);
+        template <typename T> int send(Ip, Port, const T*, size_t);
+        template <typename T> int send(const Address&, const T*, size_t);
+        template <typename T> int send(Ip, Port, T);
+        template <typename T> int send(const Address&, T);
 
     public:
-        template <class T> inline int receive(Address&, T*, size_t, unsigned int&);
-        template <class T> inline int receive_timeout(unsigned int, Address&, T*, size_t, unsigned int&);
+        template <typename T> inline int receive(Address&, T*, size_t, unsigned int&);
+        template <typename T> inline int receive_timeout(unsigned int, Address&, T*, size_t, unsigned int&);
 
     public:
-        template <class T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
-        template <class T, size_t N> Datagram<T[N]> receive(size_t len = N);
-        template <class T> Datagram<T> receive(void);
+        template <typename T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
+        template <typename T, size_t N> Datagram<T[N]> receive(size_t len = N);
+        template <typename T> Datagram<T> receive(void);
 
-        template <class T> Datagram<T*> receive_timeout(unsigned int, T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
-        template <class T, size_t N> Datagram<T[N]> receive_timeout(unsigned int, size_t len = N);
-        template <class T> Datagram<T> receive_timeout(unsigned int);
+        template <typename T> Datagram<T*> receive_timeout(unsigned int, T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
+        template <typename T, size_t N> Datagram<T[N]> receive_timeout(unsigned int, size_t len = N);
+        template <typename T> Datagram<T> receive_timeout(unsigned int);
     };
 
     class TCP : public CommonSocket
@@ -207,14 +207,14 @@ namespace Socket
 
         TCP accept_client(void);
 
-        template <class T> int send(const T*, size_t);
-        template <class T> int receive(T*, size_t);
+        template <typename T> int send(const T*, size_t);
+        template <typename T> int receive(T*, size_t);
 
-        template <class T> int send_timeout(unsigned int, const T*, size_t);
-        template <class T> int receive_timeout(unsigned int, T*, size_t);
+        template <typename T> int send_timeout(unsigned int, const T*, size_t);
+        template <typename T> int receive_timeout(unsigned int, T*, size_t);
 
         int accept_all(TCP&) throw();
-        template <class T> int receive_all(TCP&, unsigned int, T*, size_t) throw();
+        template <typename T> int receive_all(TCP&, unsigned int, T*, size_t) throw();
     };
 }
 
