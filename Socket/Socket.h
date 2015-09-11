@@ -156,12 +156,19 @@ namespace Socket
         UDP(void);
         UDP(const UDP&);
 
+    public:
+        int send(Ip ip, Port port, const char* data, size_t len);
+        int send(const Address& address, const char* data, size_t len);
+
         template <typename T> int send(Ip, Port, const T*, size_t);
         template <typename T> int send(const Address&, const T*, size_t);
         template <typename T> int send(Ip, Port, T);
         template <typename T> int send(const Address&, T);
 
     public:
+        int receive(Address& address, char* data, unsigned int& len);
+        int receive_timeout(unsigned int ms, Address& address, char* data, unsigned int& len);
+
         template <typename T> inline int receive(Address&, T*, size_t, unsigned int&);
         template <typename T> inline int receive_timeout(unsigned int, Address&, T*, size_t, unsigned int&);
 
@@ -206,6 +213,10 @@ namespace Socket
         void connect_to(Address);
 
         TCP accept_client(void);
+
+    public:
+        int send(const char* buffer, size_t len);
+        int receive(char*, size_t len);
 
         template <typename T> int send(const T*, size_t);
         template <typename T> int receive(T*, size_t);

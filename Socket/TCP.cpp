@@ -226,6 +226,54 @@ namespace Socket
         return ret;
     }
 
+    int TCP::send(const char* buffer, size_t len)
+    {
+        if (!this->_binded) throw SocketException("[send] Socket not binded");
+        if (!this->_opened) throw SocketException("[send] Socket not opened");
+
+        if (len > SOCKET_MAX_BUFFER_BYTES)
+        {
+            std::stringstream error;
+            error << "[send] [len=" << len << "] Data length higher then max buffer len ("
+                  << SOCKET_MAX_BUFFER_BYTES << ")";
+            throw SocketException(error.str());
+        }
+
+        int ret;
+        if ((ret = ::send(this->_socket_id, (const char*)buffer, len, 0)) == SOCKET_ERROR)
+            throw SocketException("[send] Cannot send");
+        return ret;
+    }
+
+    int TCP::receive(char* buffer, size_t len)
+    {
+        if (!this->_binded) throw SocketException("[receive] Socket not binded");
+        if (!this->_opened) throw SocketException("[receive] Socket not opened");
+
+        if (len > SOCKET_MAX_BUFFER_BYTES)
+        {
+            std::stringstream error;
+            error << "[receive] [len=" << len << "] Data length higher then max buffer len ("
+                  << SOCKET_MAX_BUFFER_BYTES << ")";
+            throw SocketException(error.str());
+        }
+
+        int ret;
+        ret = ::recv(this->_socket_id, (char *)buffer, len, 0);
+        if (ret == 0 || (ret == SOCKET_ERROR
+#ifdef WINDOWS
+                         && WSAGetLastError() == WSAECONNRESET
+#else
+                         && errno == ECONNRESET
+#endif
+                ))
+        {
+            ret = SOCKET_CLOSE;
+        }
+
+        return ret;
+    }
+
     template <typename T>
     int TCP::send(const T* buffer, size_t len)
     {
