@@ -244,6 +244,25 @@ namespace Socket
         return ret;
     }
 
+    int CommonSocket::get_timeout(int& sendtimeout, int& recvtimeout)
+    {
+        int ret = 0;
+        socklen_t len;
+        if ((ret = getsockopt(_socket_id, SOL_SOCKET, SO_SNDTIMEO, (char*)&sendtimeout, &len)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[get_timeout] error";
+            throw SocketException(error.str());
+        }
+        if ((ret = getsockopt(_socket_id, SOL_SOCKET, SO_SNDTIMEO, (char*)&recvtimeout, &len)) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[get_timeout] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
     int CommonSocket::set_buffsize(int sendbuffsize, int recvbuffsize)
     {
         int ret = 0;
@@ -276,13 +295,25 @@ namespace Socket
         if ((ret = getsockopt(_socket_id, SOL_SOCKET, SO_SNDBUF, (char*)&sendbuffsize, &len)) == SOCKET_ERROR)
         {
             std::stringstream error;
-            error << "[set_buffsize] error";
+            error << "[get_buffsize] error";
             throw SocketException(error.str());
         }
         if ((ret = getsockopt(_socket_id, SOL_SOCKET, SO_RCVBUF, (char*)&recvbuffsize, &len)) == SOCKET_ERROR)
         {
             std::stringstream error;
-            error << "[set_buffsize] error";
+            error << "[get_buffsize] error";
+            throw SocketException(error.str());
+        }
+        return ret;
+    }
+
+    int CommonSocket::set_dontfragment(bool isdf)
+    {
+        int ret = 0;
+        if ((ret = setsockopt(_socket_id, IPPROTO_IP, IP_DONTFRAGMENT, (const char*)&isdf, sizeof(isdf))) == SOCKET_ERROR)
+        {
+            std::stringstream error;
+            error << "[set_dontfragment] error";
             throw SocketException(error.str());
         }
         return ret;

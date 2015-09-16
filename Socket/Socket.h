@@ -138,6 +138,7 @@ namespace Socket
         int set_option(int, int, const void*, socklen_t);
         int get_option(int, int, void*, socklen_t*);
 
+        // Set option common
         int set_broadcast(bool isboardcast);
         int set_nonblock(bool isnonblock);
         int set_ttl(int ttl);
@@ -146,8 +147,10 @@ namespace Socket
         int set_tos(int tos);
         int get_tos(int& tos);
         int set_timeout(int sendtimeout, int recvtimeout);
+        int get_timeout(int& sendtimeout, int& recvtimeout);
         int set_buffsize(int sendbuffsize, int recvbuffsize);
         int get_buffsize(int& sendbuffsize, int& recvbuffsize);
+        int set_dontfragment(bool isdf);
     };
 
     class UDP : public CommonSocket
@@ -198,6 +201,7 @@ namespace Socket
         TCP(const TCP&);
         ~TCP(void);
 
+        // Set option
         int set_reuseaddr(bool isreuseaddr);
         int set_lingeroff();
         int set_lingeron(short timeoutsec);
