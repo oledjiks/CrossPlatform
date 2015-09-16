@@ -64,12 +64,14 @@ namespace Socket
     void CommonSocket::close(void)
     {
         if (this->_opened)
+        {
 #ifdef WINDOWS
             closesocket(this->_socket_id);
 #else
             shutdown(this->_socket_id, SHUT_RDWR);
             ::close(this->_socket_id);
 #endif
+        }
 
         this->_opened = false;
         this->_binded = false;
