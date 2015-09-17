@@ -220,7 +220,9 @@ namespace Socket
 
     public:
         int send(const char* buffer, size_t len);
-        int receive(char*, size_t len);
+        int receive(char* buffer, size_t len);
+        int send_timeout(unsigned int ms, const char* buffer, size_t len);
+        int receive_timeout(unsigned int ms, char* buffer, size_t len);
 
         template <typename T> int send(const T*, size_t);
         template <typename T> int receive(T*, size_t);
