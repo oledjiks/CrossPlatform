@@ -163,19 +163,19 @@ namespace Socket
         int send(Ip ip, Port port, const char* data, size_t len);
         int send(const Address& address, const char* data, size_t len);
 
+        int receive(Address& address, char* data, unsigned int& len);
+        int receive_timeout(unsigned int ms, Address& address, char* data, unsigned int& len);
+
+    public:
+        template <typename T> inline int receive(Address&, T*, size_t, unsigned int&);
+        template <typename T> inline int receive_timeout(unsigned int, Address&, T*, size_t, unsigned int&);
+
+    public:
         template <typename T> int send(Ip, Port, const T*, size_t);
         template <typename T> int send(const Address&, const T*, size_t);
         template <typename T> int send(Ip, Port, T);
         template <typename T> int send(const Address&, T);
 
-    public:
-        int receive(Address& address, char* data, unsigned int& len);
-        int receive_timeout(unsigned int ms, Address& address, char* data, unsigned int& len);
-
-        template <typename T> inline int receive(Address&, T*, size_t, unsigned int&);
-        template <typename T> inline int receive_timeout(unsigned int, Address&, T*, size_t, unsigned int&);
-
-    public:
         template <typename T> Datagram<T*> receive(T*, size_t len = SOCKET_MAX_BUFFER_BYTES / sizeof(T));
         template <typename T, size_t N> Datagram<T[N]> receive(size_t len = N);
         template <typename T> Datagram<T> receive(void);
@@ -196,6 +196,7 @@ namespace Socket
         pthread_mutex_t                       _clients_mutex;
 #endif
         class LockGuard;        // Nested Classes
+
     public:
         TCP(void);
         TCP(const TCP&);
