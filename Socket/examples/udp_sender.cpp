@@ -1,4 +1,5 @@
 #include "../Socket.h"
+#include <string>
 
 using namespace std;
 
@@ -37,6 +38,10 @@ int main(void)
     }
     catch (Socket::SocketException &e)
     {
+        int lasterror;
+        string err_msg;
+        if ((lasterror = e.get_error(err_msg)) > 0)
+            cout  << "lasterror = " << lasterror << ", " << err_msg << endl;
         cout << e << endl;
     }
 

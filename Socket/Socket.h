@@ -68,6 +68,7 @@ namespace Socket
         ~SocketException() throw();
 
         virtual const char* what() const throw();
+        unsigned long get_error(std::string& err_msg);
         friend std::ostream& operator<< (std::ostream &out, SocketException &e);
     };
 
