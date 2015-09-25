@@ -1,4 +1,5 @@
 #include "../Socket.h"
+#include <string>
 
 using namespace std;
 
@@ -18,7 +19,7 @@ int main(void)
         Socket::Address to("127.0.0.1", 10000);
 
         sock.send<string>(to, "this is the string"); // ("127.0.0.1", 10000, "this is a string");
-                                                     // as well as the others
+        // as well as the others
 
         int iarr[5] = { 0, 1, 2, 3, 4 };
         sock.send<int>(to, iarr, 5);
@@ -37,6 +38,10 @@ int main(void)
     }
     catch (Socket::SocketException &e)
     {
+        int lasterror;
+        string err_msg;
+        if ((lasterror = e.get_error(err_msg)) > 0)
+            cout  << "lasterror = " << lasterror << ", " << err_msg << endl;
         cout << e << endl;
     }
 
