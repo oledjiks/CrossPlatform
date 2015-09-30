@@ -163,6 +163,10 @@ class UDP : public CommonSocket
     UDP(const UDP&);
 
   public:
+    Ip get_ip(void);
+    Port get_port(void);
+    Address get_address(void);
+
     int send(Ip ip, Port port, const char* data, size_t len);
     int send(const Address& address, const char* data, size_t len);
 

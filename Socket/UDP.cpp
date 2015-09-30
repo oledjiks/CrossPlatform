@@ -16,6 +16,26 @@ UDP::UDP(const UDP &udp) : CommonSocket()
     this->_binded = udp._binded;
 }
 
+Ip UDP::get_ip(void)
+{
+    return (this->get_address()).get_ip();
+}
+
+Port UDP::get_port(void)
+{
+    return (this->get_address()).get_port();
+}
+
+Address UDP::get_address(void)
+{
+    Address address;
+    socklen_t len = sizeof(address);
+    if (getsockname(this->_socket_id, (struct sockaddr*)&address, &len) < 0)
+        throw SocketException("[get_address] getsockname() error");
+
+    return address;
+}
+
 int UDP::send(Ip ip, Port port, const char* data, size_t len)
 {
     if (!this->_opened) this->open();
