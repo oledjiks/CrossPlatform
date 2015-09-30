@@ -16,7 +16,7 @@ int main(void)
         // Simple prototype
         Socket::TCP client;
         client.open();
-        client.bind_on_port(PORT+2);
+        client.bind_on_port(0);
         client.connect_to(Socket::Address(IP, PORT));
 
         string str_buffer;
@@ -53,6 +53,7 @@ int main(void)
             if (!(cin >> str_buffer))
                 break;
             client.send(str_buffer.c_str(), str_buffer.length());
+            cout << "Local address: " << client.get_ip() << ":" << client.get_port() << endl;
         }
         client.close();
     }

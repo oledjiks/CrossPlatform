@@ -192,6 +192,7 @@ class TCP : public CommonSocket
 {
   private:
     Address                               _address;
+    bool                                  _ispeer;
     std::vector<std::pair<int, Address> > _clients;
 #ifdef WINDOWS
     HANDLE                                _clients_mutex;

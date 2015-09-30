@@ -52,6 +52,7 @@ class TCP::LockGuard
 
 TCP::TCP(void) : CommonSocket(SOCK_STREAM)
 {
+    this->_ispeer = false;
     this->_clients = std::vector<std::pair<int, Address> >();
 #ifdef WINDOWS
     this->_clients_mutex = CreateMutex(NULL, false, NULL);
@@ -67,6 +68,7 @@ TCP::TCP(const TCP &tcp) : CommonSocket()
     this->_binded = tcp._binded;
     this->_socket_type = tcp._socket_type;
     this->_address = tcp._address;
+    this->_ispeer = tcp._ispeer;
     this->_clients = tcp._clients;
 #ifdef WINDOWS
     this->_clients_mutex = CreateMutex(NULL, false, NULL);
@@ -166,16 +168,23 @@ void TCP::close(void)
 
 Ip TCP::get_ip(void)
 {
+    this->get_address();
     return this->_address.get_ip();
 }
 
 Port TCP::get_port(void)
 {
+    this->get_address();
     return this->_address.get_port();
 }
 
 Address TCP::get_address(void)
 {
+    socklen_t len = sizeof(this->_address);
+    if (!this->_ispeer) {
+        if (getsockname(this->_socket_id, (struct sockaddr*)&this->_address, &len) < 0)
+            throw SocketException("[get_address] getsockname() error");
+    }
     return Address(this->_address);
 }
 
@@ -222,6 +231,7 @@ TCP TCP::accept_client(void)
     ret._socket_id = accept(this->_socket_id, (struct sockaddr*)&ret._address, (socklen_t *)&len);
     ret._opened = true;
     ret._binded = true;
+    ret._ispeer = true;
 
     return ret;
 }
@@ -408,6 +418,9 @@ int TCP::accept_all(TCP& client) throw()
         LockGuard lock(this->_clients_mutex);
         this->_clients.push_back(std::make_pair(client._socket_id, client._address));
     }
+    client._opened = true;
+    client._binded = true;
+    client._ispeer = true;
 
 #ifdef _DEBUG
     std::stringstream ss;
@@ -469,6 +482,9 @@ int TCP::receive_all(TCP& client, unsigned int ms, T* buffer, size_t len) throw(
         {
             client._socket_id = this->_clients[i].first;
             client._address = this->_clients[i].second;
+            client._opened = true;
+            client._binded = true;
+            client._ispeer = true;
             ret = ::recv(this->_clients[i].first, (char *)buffer, len, 0);
 #ifdef _DEBUG
             ss << "recvfrom() return: " << ret << std::endl;
