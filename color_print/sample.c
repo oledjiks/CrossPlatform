@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
         const char * text;
     } out_struct;
 
-    int i = 0;
+    unsigned int i = 0;
     out_struct sample[]={
         {CP_FG_RED,"Red Text\n"},
         {CP_FG_BLUE,"Blue Text\n"},
