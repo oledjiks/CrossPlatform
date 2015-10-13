@@ -23,6 +23,8 @@ int main(void)
 
         // sock.set_option(SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(char)); // throw ERROR
         sock.set_option(SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(buffer_size));
+		sock.set_dontfragment(true);
+		sock.set_broadcast(true);
         sock.bind_on_port(10000);
 
         // Socket::Datagram<string>            rec_str = sock.receive<string>();
@@ -70,7 +72,7 @@ int main(void)
         string err_msg;
         if ((lasterror = e.get_error(err_msg)) > 0)
             cout  << "lasterror = " << lasterror << ", " << err_msg << endl;
-        cout << e << endl;
+        cout << e.what() << endl;
     }
 
     if (buffer)

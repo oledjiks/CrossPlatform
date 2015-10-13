@@ -21,7 +21,8 @@
 #endif
 
 #ifdef WINDOWS
-#include <winsock.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #pragma comment(lib,"ws2_32.lib")
 #else
 #include <sys/socket.h>
@@ -244,11 +245,5 @@ class TCP : public CommonSocket
 };
 }
 
-#include "Address.cpp"
-#include "CommonSocket.cpp"
-#include "Datagram.cpp"
-#include "SocketException.cpp"
-#include "TCP.cpp"
-#include "UDP.cpp"
 
 #endif  // _SOCKET_H_

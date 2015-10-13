@@ -79,7 +79,7 @@ int main(void)
     }
     catch (Socket::SocketException &e)
     {
-        cout << e << endl;
+        cout << e.what() << endl;
     }
     cout << "Server close\n";
 
@@ -105,7 +105,7 @@ int main(void)
         string err_msg;
         if ((lasterror = e.get_error(err_msg)) > 0)
             cout  << "lasterror = " << lasterror << ", " << err_msg << endl;
-        cout << e << endl;
+        cout << e.what() << endl;
     }
     cout << "Server close\n";
 
