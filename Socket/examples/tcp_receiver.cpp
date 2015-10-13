@@ -20,9 +20,9 @@ void receiving_all_msg(Socket::TCP& server, char* buffer)
         if (len > 0)
         {
             buffer[len] = '\0';
-            cout << "--> [TCP] client (" << client.get_socket_id()
+            cout << "--> [TCP] client (socket_id = " << client.get_socket_id()
                  << ")"<< client.get_ip() << ":" << client.get_port()
-                 << " <" << len << "> " << buffer << endl;
+                 << " <len = " << len << "> " << buffer << endl;
         }
     }
 }
@@ -59,7 +59,7 @@ int main(void)
             if (len > 0)
             {
                 buffer[len] = '\0';
-                cout << "received(" << len << "): " << buffer << endl;
+                cout << "received <len = " << len << ">: " << buffer << endl;
                 break;
             }
             else if (len == SOCKET_TIMEOUT)
@@ -79,7 +79,7 @@ int main(void)
     }
     catch (Socket::SocketException &e)
     {
-        cout << e << endl;
+        cout << e.what() << endl;
     }
     cout << "Server close\n";
 
@@ -105,7 +105,7 @@ int main(void)
         string err_msg;
         if ((lasterror = e.get_error(err_msg)) > 0)
             cout  << "lasterror = " << lasterror << ", " << err_msg << endl;
-        cout << e << endl;
+        cout << e.what() << endl;
     }
     cout << "Server close\n";
 

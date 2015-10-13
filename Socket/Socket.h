@@ -21,7 +21,8 @@
 #endif
 
 #ifdef WINDOWS
-#include <winsock.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #pragma comment(lib,"ws2_32.lib")
 #else
 #include <sys/socket.h>
@@ -163,6 +164,10 @@ class UDP : public CommonSocket
     UDP(const UDP&);
 
   public:
+    Ip get_ip(void);
+    Port get_port(void);
+    Address get_address(void);
+
     int send(Ip ip, Port port, const char* data, size_t len);
     int send(const Address& address, const char* data, size_t len);
 
@@ -192,6 +197,7 @@ class TCP : public CommonSocket
 {
   private:
     Address                               _address;
+    bool                                  _ispeer;
     std::vector<std::pair<int, Address> > _clients;
 #ifdef WINDOWS
     HANDLE                                _clients_mutex;
@@ -239,11 +245,5 @@ class TCP : public CommonSocket
 };
 }
 
-#include "Address.cpp"
-#include "CommonSocket.cpp"
-#include "Datagram.cpp"
-#include "SocketException.cpp"
-#include "TCP.cpp"
-#include "UDP.cpp"
 
 #endif  // _SOCKET_H_
