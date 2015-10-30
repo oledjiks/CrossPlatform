@@ -458,7 +458,7 @@ unsigned long SocketException::get_error(std::string& err_msg)
 {
 #ifdef WINDOWS
     unsigned long dw = WSAGetLastError();
-    char sz[128];
+    char sz[512];
     LPVOID lpmsg;
     size_t len = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                 NULL, dw, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
@@ -470,10 +470,10 @@ unsigned long SocketException::get_error(std::string& err_msg)
     else
         sz[len] = '\0';
     LocalFree(lpmsg);
-    err_msg = sz;
+    err_msg.assign(sz);
 #else
     unsigned long dw = errno;
-    err_msg = strerror(errno);
+    err_msg.assign(strerror(errno));
 #endif
 
     return dw;
