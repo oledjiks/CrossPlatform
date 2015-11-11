@@ -1020,13 +1020,6 @@ UDP::UDP(void) : CommonSocket(SOCK_DGRAM)
 {
 }
 
-UDP::UDP(const UDP &udp) : CommonSocket()
-{
-    this->_socket_id = udp._socket_id;
-    this->_opened = udp._opened;
-    this->_binded = udp._binded;
-}
-
 Ip UDP::get_ip(void)
 {
     return (this->get_address()).get_ip();

@@ -52,6 +52,10 @@
 #define SOCKET_MAX_BUFFER_BYTES   (64 << 10) // 64KB
 #endif
 
+#define DISALLOW_COPY_AND_ASSIGN(TypeName)      \
+    TypeName(const TypeName&);                  \
+    void operator=(const TypeName&)
+
 namespace Socket
 {
 typedef int SocketId;
@@ -161,7 +165,9 @@ class UDP : public CommonSocket
 {
   public:
     UDP(void);
-    UDP(const UDP&);
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(UDP);
 
   public:
     Ip get_ip(void);
